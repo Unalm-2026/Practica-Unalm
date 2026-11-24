@@ -1,220 +1,2092 @@
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Práctica UNALM</title>
-<style>
-:root{--bg:#f2f5ef;--cd:#fff;--tx:#18271e;--mu:#667568;--pr:#1b6b45;--sf:#e3f0e7;--bd:#d9e1d6;--no:#b93a2c;--ye:#f2c200}
-@media(prefers-color-scheme:dark){:root{--bg:#0f1611;--cd:#17221b;--tx:#e5ede7;--mu:#92a296;--pr:#4cc088;--sf:#203829;--bd:#293a2e;--no:#f0796c}}
-*{box-sizing:border-box}
-body{margin:0;font:15px/1.55 Georgia,"Times New Roman",serif;background:var(--bg);color:var(--tx)}
-button,select,input,textarea,nav,header,small,.ch{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:var(--pr);color:#fff;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-header b{font-size:18px}
-header button{background:transparent;color:#fff;border-color:#fff8}
-nav{display:flex;gap:2px;flex-wrap:wrap}
-nav button{background:transparent;color:#fff;border:0;border-bottom:3px solid transparent;border-radius:0;padding:6px 10px}
-nav button.on{border-color:var(--ye);font-weight:600}
-main{max-width:920px;margin:0 auto;padding:16px 16px 40px}
-h2{margin:20px 0 10px;font-size:22px}
-.card{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:0 0 10px}
-.click{cursor:pointer}.click:hover{border-color:var(--pr)}
-.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.g2 .card{margin:0}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.g3 .card{margin:0}
-.st{text-align:center;color:var(--mu);font-family:system-ui,sans-serif}.st b{display:block;font:600 28px Georgia,serif;color:var(--pr)}
-.mu{color:var(--mu)}
-.bar{height:6px;background:var(--sf);border-radius:4px;margin:8px 0 2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pr)}
-button,select,input,textarea{font-size:14px;color:var(--tx);background:var(--cd);border:1px solid var(--bd);border-radius:8px;padding:7px 10px}
-button{cursor:pointer}button:hover{border-color:var(--pr)}
-button.pr{background:var(--pr);color:#fff;border-color:var(--pr)}
-:focus-visible{outline:2px solid var(--ye);outline-offset:2px}
-textarea{width:100%;min-height:84px;font-family:Georgia,serif;font-size:15px}
-.tb{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
-details{background:var(--cd);border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;padding:10px 14px}
-summary{cursor:pointer}
-.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}.row>span:first-child{flex:1;min-width:170px}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.ch{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--sf)}.ch.g{border:1px solid var(--pr)}.ch a{cursor:pointer;margin-left:5px;font-weight:700}
-.act{display:flex;gap:8px;align-items:center}.act small{flex:1}
-.op{display:block;width:100%;text-align:left;margin:7px 0;padding:11px 13px;font-family:Georgia,serif;font-size:15px}
-.op.ok{border-color:var(--pr);background:var(--sf)}.op.bad{border-color:var(--no)}
-.ex{background:var(--sf);border-radius:8px;padding:11px;margin-top:10px}
-.fr{display:flex;gap:8px;align-items:center;margin:7px 0}.fr input[type=text]{flex:1}
-@media(max-width:560px){.g3{grid-template-columns:1fr}}
-</style></head>
-<body>
-<header><b>Práctica UNALM</b><nav id="nav"></nav><div id="us"></div></header>
-<main id="app"></main>
-<script type="module">
-// 1) Pega aquí la configuración de tu proyecto de Firebase (ver instrucciones). Si la dejas vacía, la web funciona en modo local.
-const FB={apiKey:"AIzaSyAeKSarxFWJAahK5d__J8exfT0Hh-pFM3A",authDomain:"unalm2027.firebaseapp.com",projectId:"unalm2027",appId:"1:717988445159:web:84dd43502f76b781c75b42"};
-const cloud=!!FB.apiKey;
-const ADMIN="unalm.clases.2026@gmail.com"; // 2) Tu Gmail: solo tú podrás editar temas y preguntas
-const isA=()=>!cloud||(S.u?.email||"").toLowerCase()==ADMIN.toLowerCase();
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Práctica UNALM — Admisión Universidad Nacional Agraria La Molina</title>
 
-const C=[
-["verbal","Razonamiento verbal","Comprensión de lectura|Vocabulario|Analogías|Oraciones incompletas|Organización de la información"],
-["rm","Razonamiento matemático","Razonamiento lógico matemático|Psicotécnico|Sumas|Conteo|Planteo de ecuaciones|Operadores matemáticos|Áreas y perímetros|Análisis combinatorio"],
-["ari","Aritmética","Conjuntos|Números enteros|Números racionales|Razones y proporciones|Magnitudes proporcionales|Tanto por ciento|Regla de tres|Estadística"],
-["alg","Álgebra","Leyes de exponentes|Polinomios|Factorización|Fracciones algebraicas|Desigualdades e inecuaciones|Valor absoluto|Radicación|Números complejos|Ecuaciones lineales|Ecuaciones de segundo grado|Sistemas de ecuaciones|Ecuaciones polinomiales|Logaritmos y exponenciales|Relaciones y funciones"],
-["geo","Geometría","Conceptos fundamentales|Triángulos|Polígonos|Cuadriláteros|Circunferencia|Proporcionalidad y semejanza|Relaciones métricas|Áreas|Geometría del espacio|Poliedros|Prisma y pirámide|Superficies de revolución"],
-["tri","Trigonometría","Ángulos y sistemas de medición|Sector circular|Razones trigonométricas del ángulo agudo|Triángulos rectángulos|Ángulo en posición normal|Círculo trigonométrico|Funciones trigonométricas inversas|Identidades trigonométricas|Reducción al primer cuadrante|Ecuaciones trigonométricas|Triángulos oblicuángulos"],
-["bio","Biología","Composición química de la materia viva|La célula|Herencia y división celular|Funciones del organismo|Metabolismo celular|Evolución y diversidad|Ecología"],
-["qui","Química","Materia|El átomo|Tabla periódica|Enlaces químicos|Reacciones químicas|Compuestos oxigenados|Unidades químicas|Propiedades de compuestos orgánicos|Compuestos nitrogenados|Nomenclatura inorgánica|Hidrocarburos|Estequiometría"],
-["fis","Física","Vectores y escalares|Cinemática|Dinámica|Calorimetría|Electromagnetismo|Óptica|Física moderna"],
-["eco","Economía","Fundamentos de economía|Necesidades y bienes|Proceso económico|Factores productivos|Circulación y mercados|Demanda, oferta y equilibrio|Dinero e inflación|Sistema financiero|BCRP y SBS|Sector externo|Integración económica|Balanza de pagos|Sector público|Presupuesto público|Cuentas nacionales|Ciclos económicos"],
-["his","Historia del Perú y del mundo","Segunda Revolución Industrial|Primer militarismo|Primer civilismo y Guerra del Salitre|Primera Guerra Mundial y Revolución Rusa|Totalitarismos y Segunda Guerra Mundial|Oncenio y tercer militarismo|Guerra Fría y Guerra de Corea|Perú años 40 y 50|Descolonización y Revolución China|Coexistencia pacífica|Convivencia y Belaundismo|Final de la Guerra Fría|Gobierno militar y años 80|Nuevo orden mundial|Década de 1990|Gobiernos del siglo XXI"],
-["geg","Geografía","La geografía como ciencia|El universo|Evolución de la Tierra|Representaciones y hora mundial|Morfología del Perú|Vertientes hidrográficas|Clima y cambio climático|Recursos naturales|Geopolítica y población|Actividades económicas|Ambiente en el mundo|Ambiente en el Perú"]];
-const CO=C.map(([c,n,s])=>({c,n,t:s.split("|").map((x,i)=>({i:c+i,n:x}))}));
-const T={},CN={};
-function build(){for(const k in T)delete T[k];C.length=0;CO.forEach(o=>{C.push([o.c,o.n]);CN[o.c]=o.n;o.t.forEach(x=>T[x.i]={n:x.n,c:o.c})})}
-build();
-const topicsMap=()=>Object.fromEntries(CO.map(o=>[o.c,o.t]));
-const applyTopics=m=>{if(m)CO.forEach(o=>{if(m[o.c])o.t=m[o.c]})};
-const tids=c=>Object.keys(T).filter(k=>T[k].c==c);
-const W={verbal:14,rm:14,ari:6,alg:9,geo:5,tri:5,bio:10,qui:9,fis:8,eco:6,his:7,geg:7}; // preguntas por curso según el temario
-const EXAM="2027-02-28"; // fecha de tu examen (AAAA-MM-DD)
-const PRL=["","muy probable","casi seguro"]; // prioridad según la frecuencia en exámenes anteriores
-const PR={verbal0:2,verbal1:2,verbal2:2,verbal3:1,verbal4:2,rm0:1,rm1:2,rm2:2,rm4:2,rm5:1,rm6:2,rm7:1,ari2:1,ari5:1,ari7:1,alg3:1,alg7:1,geo1:1,geo5:1,geo7:1,tri2:1,tri7:1,tri10:1,bio1:2,bio2:1,bio3:1,bio4:1,bio5:1,bio6:2,qui3:1,qui4:1,qui6:2,qui8:1,qui10:1,fis0:1,fis2:2,fis3:1,fis4:1,fis5:2,his4:1,his5:1,his6:1};
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const S={u:null,Q:[],m:{tags:[],hist:[]},v:"home",f:{},run:null,ed:null};
+  <!-- Fuente Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-let fs,au,auth,db;
-if(cloud){
- const B="https://www.gstatic.com/firebasejs/10.12.2/";
- const [A,a,f]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-auth.js"),import(B+"firebase-firestore.js")]);
- const app=A.initializeApp(FB);au=a;fs=f;auth=a.getAuth(app);db=f.getFirestore(app);
-}
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            unalm: {
+              50: '#f1f8f2',
+              100: '#ddeee0',
+              200: '#bcdcc2',
+              600: '#25702b',
+              700: '#1B5E20',
+              800: '#144918',
+              900: '#0e3611',
+            }
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 pb-20 md:pb-0">
 
-// ---------- Almacenamiento (Firestore o navegador) ----------
-const P=()=>"users/"+S.u.uid;
-const persist=()=>localStorage.setItem("unalm_local",JSON.stringify({Q:S.Q,m:S.m,topics:topicsMap()}));
-async function load(){
- S.Q=[];S.m={tags:[],hist:[]};
- if(cloud){
-  if(!S.u)return;
-  const [a,b,c]=await Promise.all([fs.getDocs(fs.collection(db,"bank")),fs.getDoc(fs.doc(db,"config/main")),fs.getDoc(fs.doc(db,P()+"/prog/main"))]);
-  S.Q=a.docs.map(d=>d.data());const g=b.exists()?b.data():{},p=c.exists()?c.data():{};S.m={tags:g.tags||[],hist:p.hist||[]};S.prog=p.st||{};applyTopics(g.topics);S.Q.forEach(q=>q.st=S.prog[q.id]||{ok:0,no:0,last:null});
-  build();
- }else{try{const d=JSON.parse(localStorage.getItem("unalm_local")||"{}");S.Q=d.Q||[];S.m=d.m||S.m;applyTopics(d.topics)}catch(e){}build()}
-}
-async function saveQ(q){const i=S.Q.findIndex(x=>x.id==q.id);i<0?S.Q.push(q):S.Q[i]=q;if(cloud){const{st,...d}=q;await fs.setDoc(fs.doc(db,"bank/"+q.id),d)}else persist()}
-async function delQ(id){S.Q=S.Q.filter(x=>x.id!=id);cloud?await fs.deleteDoc(fs.doc(db,"bank/"+id)):persist()}
-async function saveM(){if(!cloud)return persist();if(isA())await fs.setDoc(fs.doc(db,"config/main"),{tags:S.m.tags,topics:topicsMap()})}
-async function saveP(q){if(!cloud)return persist();if(q)S.prog[q.id]=q.st;await fs.setDoc(fs.doc(db,P()+"/prog/main"),{st:S.prog,hist:S.m.hist||[]})}
+  <!-- =========================================================
+       ENCABEZADO PRINCIPAL
+       ========================================================= -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Marca -->
+      <button onclick="navigate('inicio')" class="flex items-center gap-2.5 text-left focus:outline-none">
+        <div class="w-9 h-9 rounded-lg bg-unalm-700 text-white flex items-center justify-center font-bold text-sm tracking-tight">
+          UA
+        </div>
+        <div>
+          <div class="font-bold text-base tracking-tight text-slate-900 dark:text-white leading-tight">Práctica UNALM</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight hidden sm:block">Admisión Agraria La Molina</div>
+        </div>
+      </button>
 
-// ---------- Utilidades ----------
-const eff=q=>{const s=new Set([q.t]);(q.tg||[]).forEach(n=>(S.m.tags.find(x=>x.n==n)?.t||[]).forEach(t=>s.add(t)));return s};
-const acc=a=>{let o=0,n=0;a.forEach(q=>{o+=q.st?.ok||0;n+=(q.st?.ok||0)+(q.st?.no||0)});return{o,n,p:n?Math.round(100*o/n):null}};
-const flt=f=>S.Q.filter(q=>(!f.c||q.c==f.c)&&(!f.t||eff(q).has(f.t))&&(!f.g||(q.tg||[]).includes(f.g))&&(!f.k||q.src?.k==f.k)&&(!f.fail||q.st?.last===false)&&(!f.s||(q.p+" "+q.o.join(" ")).toLowerCase().includes(f.s.toLowerCase())));
-const bar=p=>`<div class="bar"><i style="width:${p||0}%"></i></div><small class="mu">${p==null?"sin intentos":p+"% de acierto"}</small>`;
-const oc=(v,all="Todos los cursos")=>`<option value="">${all}</option>`+C.map(([c,n])=>`<option value="${c}"${v==c?" selected":""}>${n}</option>`).join("");
-const ot=(c,v,all="Todos los temas")=>`<option value="">${all}</option>`+(c?tids(c).map(t=>`<option value="${t}"${v==t?" selected":""}>${esc(T[t].n)}</option>`).join(""):"");
-const og=v=>`<option value="">Todas las etiquetas</option>`+S.m.tags.map(g=>`<option${v==g.n?" selected":""}>${esc(g.n)}</option>`).join("");
-const okS=(v,all="Toda fuente")=>`<option value="">${all}</option>`+["examen","simulacro","guía"].map(k=>`<option${v==k?" selected":""}>${k}</option>`).join("");
-const filt=()=>{const f=S.f;return `<select data-f="c">${oc(f.c)}</select><select data-f="t">${ot(f.c,f.t)}</select><select data-f="g">${og(f.g)}</select><select data-f="k">${okS(f.k)}</select>`};
-const stats=()=>{const a=acc(S.Q);return `<div class="g3"><div class="card st"><b>${S.Q.length}</b>preguntas</div><div class="card st"><b>${a.n}</b>intentos</div><div class="card st"><b>${a.p==null?"–":a.p+"%"}</b>de acierto</div></div>`};
-const draft=()=>({isNew:1,id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),c:S.f.c||"",t:S.f.t||"",p:"",o:["","","","",""],a:-1,e:"",src:{k:"",y:""},tg:[],st:{ok:0,no:0,last:null}});
-const sync=()=>{const q=S.ed;if(!q||!$("#fp"))return;q.p=$("#fp").value;q.e=$("#fe").value;q.o=[0,1,2,3,4].map(i=>$("#fo"+i).value);const r=document.querySelector("[name=fa]:checked");q.a=r?+r.value:-1;q.src={k:$("#fk").value,y:$("#fy").value}};
+      <!-- Navegación Desktop -->
+      <nav class="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+        <button data-nav="inicio" onclick="navigate('inicio')" class="nav-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors">Inicio</button>
+        <button data-nav="temario" onclick="navigate('temario')" class="nav-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors">Temario</button>
+        <button data-nav="practicar" onclick="navigate('practicar')" class="nav-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors">Practicar</button>
+        <button data-nav="simulacro" onclick="navigate('simulacro')" class="nav-btn px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors">Simulacro</button>
+        <button id="nav-admin-desktop" data-nav="admin" onclick="navigate('admin')" class="nav-btn hidden px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors">Admin</button>
+      </nav>
 
-// ---------- Vistas ----------
-const lst=()=>{const a=flt(S.f);return a.length?a.map(q=>{const r=acc([q]);return `<div class="card"><div>${esc(q.p.slice(0,200))}${q.p.length>200?"…":""}</div><div class="chips"><span class="ch">${CN[q.c]}: ${esc(T[q.t]?.n)}</span>${q.src?.k?`<span class="ch">${q.src.k} ${esc(q.src.y)}</span>`:""}${(q.tg||[]).map(g=>`<span class="ch g">#${esc(g)}</span>`).join("")}</div><div class="act"><small class="mu">${r.n?`${r.o} de ${r.n} aciertos`:"sin intentos"}</small>${isA()?`<button data-a="edit" data-id="${q.id}">Editar</button><button data-a="del" data-id="${q.id}">Borrar</button>`:""}</div></div>`}).join(""):`<p class="mu">No hay preguntas con estos filtros. Crea una con “Nueva pregunta”.</p>`};
+      <!-- Controles Derecha: Autenticación y Tema -->
+      <div class="flex items-center gap-2">
+        <div id="auth-controls" class="flex items-center gap-2">
+          <!-- Renderizado dinámicamente -->
+        </div>
 
-const form=()=>{const q=S.ed;return `<div class="card"><h2 style="margin-top:0">${q.isNew?"Nueva pregunta":"Editar pregunta"}</h2>
-<div class="tb"><select data-e="c">${oc(q.c,"Curso…")}</select><select data-e="t">${ot(q.c,q.t,"Tema…")}</select><select id="fk">${okS(q.src?.k,"Fuente…")}</select><input type="text" id="fy" style="width:150px" placeholder="Año, ej. 2026 II" value="${esc(q.src?.y)}"></div>
-<textarea id="fp" placeholder="Enunciado">${esc(q.p)}</textarea>
-${[0,1,2,3,4].map(i=>`<div class="fr"><input type="radio" name="fa" value="${i}"${q.a===i?" checked":""} aria-label="Correcta ${"ABCDE"[i]}"><b>${"ABCDE"[i]}</b><input type="text" id="fo${i}" value="${esc(q.o[i])}" placeholder="Alternativa ${"ABCDE"[i]}"></div>`).join("")}
-<small class="mu">Marca el círculo de la alternativa correcta. Las alternativas vacías se ignoran.</small>
-<textarea id="fe" placeholder="Explicación o solución (opcional)" style="margin-top:10px">${esc(q.e)}</textarea>
-<h3>Etiquetas</h3><div class="chips">${q.tg.map(g=>`<span class="ch g">#${esc(g)} <a data-a="rmtag" data-g="${esc(g)}">×</a></span>`).join("")}</div>
-<div class="fr"><input type="text" id="ft" list="dl" placeholder="Escribe o elige una etiqueta"><datalist id="dl">${S.m.tags.map(g=>`<option value="${esc(g.n)}">`).join("")}</datalist><button data-a="addtag">Añadir etiqueta</button></div>
-<small class="mu">Una etiqueta nueva se conecta con el tema de esta pregunta. Puedes cambiar sus temas en la pestaña Etiquetas.</small>
-<div class="tb" style="margin-top:14px"><button class="pr" data-a="save">Guardar pregunta</button><button data-a="cancel">Cancelar</button></div></div>`};
+        <button onclick="toggleTheme()" aria-label="Cambiar tema" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          <svg id="icon-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"></path>
+          </svg>
+          <svg id="icon-moon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
 
-const V={
-home(){const d=Math.ceil((new Date(EXAM+"T00:00")-Date.now())/864e5);return (d>0?`<p class="mu">Faltan <b>${d}</b> días para el examen.</p>`:"")+stats()+`<h2>Cursos</h2><div class="g2">`+C.map(([c,n])=>{const q=S.Q.filter(x=>x.c==c);return `<div class="card click" data-a="course" data-c="${c}"><b>${n}</b><div class="mu">${W[c]} en el examen, ${q.length} en tu banco</div>${bar(acc(q).p)}</div>`}).join("")+"</div>"},
-tem(){return `<p class="mu">Las etiquetas “casi seguro” y “muy probable” salen de la frecuencia de temas en los exámenes anteriores.</p>`+C.map(([c,n])=>`<details${S.f.oc==c?" open":""}><summary><b>${n}</b> <span class="mu">${W[c]} preguntas en el examen, ${S.Q.filter(q=>q.c==c).length} en tu banco</span></summary>`+tids(c).map(t=>{const q=S.Q.filter(x=>eff(x).has(t)),p=acc(q).p;return `<div class="row"><span>${esc(T[t].n)}${PR[t]?` <span class="ch${PR[t]>1?" g":""}">${PRL[PR[t]]}</span>`:""}</span><small class="mu">${q.length} preguntas, ${p==null?"sin intentos":p+"% de acierto"}</small><button data-a="ver" data-t="${t}">Ver</button><button data-a="prac" data-t="${t}">Practicar</button>${isA()?`<button data-a="rent" data-t="${t}">Renombrar</button><button data-a="delt" data-t="${t}">Eliminar</button>`:""}</div>`}).join("")+(isA()?`<div class="row"><button data-a="addt" data-c="${c}">Agregar tema</button></div>`:"")+"</details>").join("")},
-preg(){if(S.ed)return form();return `<div class="tb">${filt()}<input id="sr" placeholder="Buscar texto…" value="${esc(S.f.s||"")}">${isA()?`<button class="pr" data-a="new">Nueva pregunta</button>`:""}</div><div id="list">${lst()}</div>`},
-tags(){return `<p class="mu">Conecta cada etiqueta con temas del temario: sus preguntas también cuentan en esos temas.</p><div class="fr"><input type="text" id="nt" placeholder="Nueva etiqueta, ej. fracciones, trampa, fórmula"><button class="pr" data-a="newtag">Crear etiqueta</button></div>`+S.m.tags.map(g=>`<div class="card"><b>#${esc(g.n)}</b> <small class="mu">${S.Q.filter(q=>(q.tg||[]).includes(g.n)).length} preguntas</small><div class="chips">${g.t.map(t=>`<span class="ch">${CN[T[t].c]}: ${esc(T[t].n)} <a data-a="unlink" data-g="${esc(g.n)}" data-t="${t}">×</a></span>`).join("")||'<small class="mu">Sin temas conectados</small>'}</div><div class="fr"><select data-l="${esc(g.n)}"><option value="">Conectar con un tema…</option>${C.map(([c,n])=>`<optgroup label="${n}">${tids(c).map(t=>`<option value="${t}">${esc(T[t].n)}</option>`).join("")}</optgroup>`).join("")}</select><button data-a="deltag" data-g="${esc(g.n)}">Eliminar etiqueta</button></div></div>`).join("")},
-prac(){const r=S.run;
- if(!r)return `<div class="card"><h2 style="margin-top:0">Practicar</h2><div class="tb">${filt()}</div><div class="fr"><label>Preguntas <input type="number" id="nq" value="10" min="1" max="100" style="width:80px"></label><label><input type="checkbox" data-f="fail"${S.f.fail?" checked":""}> Solo las que fallé</label></div><p class="mu">${flt(S.f).length} preguntas disponibles con estos filtros.</p><button class="pr" data-a="start">Empezar</button></div><div class="card"><b>Simulacro</b><p class="mu">Arma un examen con las proporciones del temario (hasta ${Object.values(W).reduce((a,b)=>a+b)} preguntas, según tu banco), con cronómetro y sin ver las respuestas hasta el final.</p><button data-a="sim">Empezar simulacro</button></div>`;
- if(r.i>=r.l.length)return `<div class="card st"><b>${r.ok} de ${r.l.length}</b>correctas (${Math.round(100*r.ok/r.l.length)}%)${r.det||""}<div class="tb" style="justify-content:center;margin-top:12px"><button class="pr" data-a="nav" data-v="res">Ver resultados</button><button data-a="nav" data-v="prac">Otra práctica</button></div></div>`;
- const q=S.Q.find(x=>x.id==r.l[r.i]),s=r.sel;
- return `<div class="card"><small class="mu">Pregunta ${r.i+1} de ${r.l.length}. ${CN[q.c]}: ${esc(T[q.t]?.n)}</small>${r.sim?` <small id="tm"></small>`:""}<p>${esc(q.p).replace(/\n/g,"<br>")}</p>`+q.o.map((t,i)=>`<button class="op${s!=null?(i==q.a?" ok":i==s?" bad":""):""}" data-a="opt" data-i="${i}"${s!=null?" disabled":""}><b>${"ABCDE"[i]}.</b> ${esc(t)}</button>`).join("")+(r.sim?`<div class="tb"><button data-a="skip">Saltar</button><button data-a="fin">Terminar simulacro</button></div>`:"")+(s!=null?`<div class="ex"><b>${s==q.a?"Correcto":"Incorrecto"}</b>${q.e?`<br>${esc(q.e).replace(/\n/g,"<br>")}`:""}</div><div class="tb" style="margin-top:12px"><button class="pr" data-a="next">${r.i+1<r.l.length?"Siguiente":"Terminar"}</button></div>`:"")+"</div>"},
-res(){const tp=Object.keys(T).map(t=>({t,...acc(S.Q.filter(x=>eff(x).has(t)))})).filter(x=>x.n).sort((x,y)=>x.p-y.p).slice(0,10),h=(S.m.hist||[]).slice(-12).reverse();
- return stats()+`<h2>Por curso</h2>`+C.map(([c,n])=>{const r=acc(S.Q.filter(q=>q.c==c));return `<div class="card"><b>${n}</b> <small class="mu">${r.n} intentos</small>${bar(r.p)}</div>`}).join("")
- +`<h2>Temas a reforzar</h2>`+(tp.length?tp.map(x=>`<div class="row"><span>${CN[T[x.t].c]}: ${esc(T[x.t].n)}</span><small>${x.p}% (${x.o} de ${x.n})</small><button data-a="prac" data-t="${x.t}">Practicar</button></div>`).join(""):`<p class="mu">Responde preguntas para ver tus temas más débiles.</p>`)
- +`<h2>Últimos intentos</h2>`+h.map(x=>{const q=S.Q.find(y=>y.id==x.q);return q?`<div class="row"><span>${x.ok?"✔":"✘"} ${esc(q.p.slice(0,80))}</span><small class="mu">${new Date(x.t).toLocaleDateString("es-PE")}</small></div>`:""}).join("")
- +`<div class="tb" style="margin-top:14px"><button data-a="fails">Repasar las que fallé</button></div>`}
-};
+  <!-- =========================================================
+       CONTENIDO PRINCIPAL
+       ========================================================= -->
+  <main id="app-root" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div class="py-20 text-center text-sm text-slate-500 dark:text-slate-400">Cargando plataforma...</div>
+  </main>
 
-const NAV=[["home","Inicio"],["tem","Temario"],["preg","Preguntas"],["tags","Etiquetas"],["prac","Practicar"],["res","Resultados"]];
-function render(){
- $("#nav").innerHTML=NAV.filter(([v])=>v!="tags"||isA()).map(([v,n])=>`<button class="${S.v==v?"on":""}" data-a="nav" data-v="${v}">${n}</button>`).join("");
- $("#us").innerHTML=cloud?(S.u?`<small>${esc(S.u.displayName||S.u.email)}${isA()?" (admin)":""}</small> <button data-a="out">Salir</button>`:""):`<small>Modo local: se guarda solo en este navegador</small>`;
- $("#app").innerHTML=cloud&&!S.u?`<div class="card st"><h2>Inicia sesión para guardar tu progreso</h2><button class="pr" data-a="in">Entrar con Google</button></div>`:V[S.v]();
-}
+  <!-- =========================================================
+       NAVEGACIÓN INFERIOR MÓVIL
+       ========================================================= -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 px-2 py-1.5">
+    <div id="mobile-nav-grid" class="grid grid-cols-4 gap-1">
+      <button data-nav-mobile="inicio" onclick="navigate('inicio')" class="mob-nav-btn py-2 rounded-lg text-xs font-medium text-center">Inicio</button>
+      <button data-nav-mobile="temario" onclick="navigate('temario')" class="mob-nav-btn py-2 rounded-lg text-xs font-medium text-center">Temario</button>
+      <button data-nav-mobile="practicar" onclick="navigate('practicar')" class="mob-nav-btn py-2 rounded-lg text-xs font-medium text-center">Practicar</button>
+      <button data-nav-mobile="simulacro" onclick="navigate('simulacro')" class="mob-nav-btn py-2 rounded-lg text-xs font-medium text-center">Simulacro</button>
+      <button id="nav-admin-mobile" data-nav-mobile="admin" onclick="navigate('admin')" class="mob-nav-btn hidden py-2 rounded-lg text-xs font-medium text-center">Admin</button>
+    </div>
+  </nav>
 
-async function finish(){const r=S.run;if(r.done)return;r.done=1;clearInterval(S.tm);r.i=r.l.length;const by={};
- for(const id of r.l){const a=r.ans[id];if(a==null)continue;const q=S.Q.find(x=>x.id==id),g=a==q.a;if(g)r.ok++;
-  by[q.c]=by[q.c]||[0,0];by[q.c][1]++;if(g)by[q.c][0]++;
-  q.st={ok:(q.st?.ok||0)+(g?1:0),no:(q.st?.no||0)+(g?0:1),last:g};
-  S.m.hist=[...(S.m.hist||[]),{t:Date.now(),q:id,ok:g}].slice(-300);if(S.prog)S.prog[q.id]=q.st}
- r.det=Object.entries(by).map(([c,[o,n]])=>`<div class="row"><span>${CN[c]}</span><small>${o} de ${n}</small></div>`).join("")+`<small class="mu">Sin responder: ${r.l.filter(id=>r.ans[id]==null).length}</small>`;await saveP();
- await saveM();render()}
-const tick=()=>{const r=S.run;if(!r||!r.sim||r.done){clearInterval(S.tm);return}const s=Math.max(0,Math.round((r.end-Date.now())/1000)),el=$("#tm");if(el)el.textContent="Tiempo: "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0");if(!s)finish()};
+  <!-- =========================================================
+       NOTIFICACIONES TOAST
+       ========================================================= -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
 
-// ---------- Acciones ----------
-const H={
- nav(d){clearInterval(S.tm);S.v=d.v;S.f={};S.run=null;S.ed=null;render()},
- course(d){S.v="tem";S.f={oc:d.c};render()},
- ver(d){S.v="preg";S.f={c:T[d.t].c,t:d.t};render()},
- prac(d){S.v="prac";S.f={c:T[d.t].c,t:d.t};S.run=null;render()},
- fails(){S.v="prac";S.f={fail:true};S.run=null;render()},
- new(){S.ed=draft();render()},
- edit(d){const q=S.Q.find(x=>x.id==d.id);S.ed={...q,o:[...q.o,"","","","",""].slice(0,5),tg:[...(q.tg||[])]};render()},
- async del(d){if(confirm("¿Borrar esta pregunta?")){await delQ(d.id);render()}},
- cancel(){S.ed=null;render()},
- addtag(){sync();const n=$("#ft").value.trim();if(!n)return;if(!S.ed.tg.includes(n))S.ed.tg.push(n);if(!S.m.tags.some(g=>g.n==n))S.m.tags.push({n,t:S.ed.t?[S.ed.t]:[]});render()},
- rmtag(d){sync();S.ed.tg=S.ed.tg.filter(g=>g!=d.g);render()},
- async save(){sync();const q=S.ed,o=[],m=[];
-  q.o.forEach((t,i)=>{if(t.trim()){m[i]=o.length;o.push(t.trim())}});
-  if(!q.p.trim()||!q.c||!q.t||o.length<2||m[q.a]==null)return alert("Completa el enunciado, el curso y el tema, al menos 2 alternativas y marca la correcta.");
-  const{isNew,...d}=q;d.p=d.p.trim();d.o=o;d.a=m[q.a];
-  await saveQ(d);await saveM();S.ed=null;render()},
- newtag(){const n=$("#nt").value.trim();if(n&&!S.m.tags.some(g=>g.n==n))S.m.tags.push({n,t:[]});saveM();render()},
- unlink(d){const g=S.m.tags.find(x=>x.n==d.g);g.t=g.t.filter(t=>t!=d.t);saveM();render()},
- async deltag(d){if(!confirm("¿Eliminar la etiqueta #"+d.g+"? Se quitará de sus preguntas."))return;
-  S.m.tags=S.m.tags.filter(g=>g.n!=d.g);
-  for(const q of S.Q.filter(x=>(x.tg||[]).includes(d.g))){q.tg=q.tg.filter(g=>g!=d.g);await saveQ(q)}
-  await saveM();render()},
- start(){const n=Math.max(1,+$("#nq").value||10),l=flt(S.f).map(q=>q.id).sort(()=>Math.random()-.5).slice(0,n);
-  if(!l.length)return alert("No hay preguntas con esos filtros.");S.run={l,i:0,sel:null,ok:0};render()},
- async opt(d){const r=S.run;if(r.sel!=null)return;const q=S.Q.find(x=>x.id==r.l[r.i]),i=+d.i,good=i==q.a;if(r.sim){r.ans[q.id]=i;r.i++;return r.i>=r.l.length?finish():render()}r.sel=i;if(good)r.ok++;
-  q.st={ok:(q.st?.ok||0)+(good?1:0),no:(q.st?.no||0)+(good?0:1),last:good};
-  S.m.hist=[...(S.m.hist||[]),{t:Date.now(),q:q.id,ok:good}].slice(-300);
-  render();await saveP(q)},
- next(){S.run.i++;S.run.sel=null;render()},
- sim(){const l=[];C.forEach(([c])=>l.push(...S.Q.filter(q=>q.c==c).sort(()=>Math.random()-.5).slice(0,W[c]).map(q=>q.id)));
-  if(l.length<5)return alert("Carga al menos 5 preguntas para armar un simulacro.");
-  S.run={l,i:0,sel:null,ok:0,sim:1,ans:{},end:Date.now()+Math.round(l.length*1.8*60000)};render();clearInterval(S.tm);S.tm=setInterval(tick,1000);tick()},
- skip(){S.run.i++;S.run.i>=S.run.l.length?finish():render();tick()},
- fin(){if(confirm("¿Terminar el simulacro ahora?"))finish()},
- addt(d){const n=(prompt("Nombre del nuevo tema")||"").trim();if(!n)return;CO.find(o=>o.c==d.c).t.push({i:d.c+"n"+Date.now().toString(36),n});build();saveM();render()},
- rent(d){const x=CO.find(o=>o.c==T[d.t].c).t.find(x=>x.i==d.t),n=(prompt("Nuevo nombre del tema",x.n)||"").trim();if(!n)return;x.n=n;build();saveM();render()},
- delt(d){const k=S.Q.filter(q=>q.t==d.t).length;if(k)return alert("Este tema tiene "+k+" preguntas. Muévelas a otro tema o bórralas primero.");if(!confirm("¿Eliminar este tema?"))return;const o=CO.find(o=>o.c==T[d.t].c);o.t=o.t.filter(x=>x.i!=d.t);S.m.tags.forEach(g=>g.t=g.t.filter(x=>x!=d.t));build();saveM();render()},
- in:()=>au.signInWithPopup(auth,new au.GoogleAuthProvider()).catch(e=>alert("No se pudo iniciar sesión: "+e.code)),
- out:()=>au.signOut(auth)
-};
-document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&H[b.dataset.a])H[b.dataset.a](b.dataset)});
-document.addEventListener("change",e=>{const t=e.target,d=t.dataset;
- if(d.f){S.f[d.f]=t.type=="checkbox"?t.checked:t.value;if(d.f=="c")S.f.t="";render()}
- else if(d.e){sync();S.ed[d.e]=t.value;if(d.e=="c")S.ed.t="";render()}
- else if(d.l!=null&&t.value){const g=S.m.tags.find(x=>x.n==d.l);if(g&&!g.t.includes(t.value))g.t.push(t.value);saveM();render()}
-});
-document.addEventListener("input",e=>{if(e.target.id=="sr"){S.f.s=e.target.value;$("#list").innerHTML=lst()}});
+  <!-- =========================================================
+       MODAL DE CONFIRMACIÓN PERSONALIZADO
+       ========================================================= -->
+  <div id="custom-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-xl">
+      <h3 id="modal-title" class="font-bold text-base text-slate-900 dark:text-white mb-2">Confirmar</h3>
+      <p id="modal-message" class="text-sm text-slate-600 dark:text-slate-300 mb-6"></p>
+      <div class="flex justify-end gap-2">
+        <button id="modal-cancel" class="px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">Cancelar</button>
+        <button id="modal-confirm" class="px-4 py-2 rounded-lg text-sm font-medium bg-unalm-700 hover:bg-unalm-800 text-white">Aceptar</button>
+      </div>
+    </div>
+  </div>
 
-if(cloud)au.onAuthStateChanged(auth,async u=>{S.u=u;await load();render()});
-else{await load();render()}
-</script>
-</body></html>
+  <!-- =========================================================
+       LÓGICA DE LA APLICACIÓN Y FIREBASE (SDK MODULAR v10)
+       ========================================================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    /* ===========================================================
+       1. CONFIGURACIÓN DE FIREBASE Y CONSTANTES OFICIALES
+       =========================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDJV1s0fdrf1SBnJc9Z3q85CE1nDrXZE_A",
+      authDomain: "molinero-eb150.firebaseapp.com",
+      projectId: "molinero-eb150",
+      storageBucket: "molinero-eb150.firebasestorage.app",
+      messagingSenderId: "441965632025",
+      appId: "1:441965632025:web:4e81bc67080213eaeb2888",
+      measurementId: "G-MS4N2P0V8N"
+    };
+
+    const ADMIN_EMAIL = "unalm.clases.2026@gmail.com";
+    const EXAM_DATE_ISO = "2027-02-28T08:00:00-05:00";
+    const SCORE_CORRECT = 1.00;
+    const SCORE_INCORRECT = -0.17;
+    const SCORE_BLANK = 0.00;
+    const LOCAL_STORAGE_KEY = "practica_unalm_local_v2";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    /* ===========================================================
+       2. TEMARIO OFICIAL UNALM POR DEFECTO (4 ÁREAS, 12 CURSOS)
+       =========================================================== */
+    const AREAS = [
+      { id: "competencias", name: "Competencias Generales", officialTotal: 28 },
+      { id: "matematicas", name: "Matemáticas", officialTotal: 25 },
+      { id: "naturales", name: "Ciencias Naturales", officialTotal: 27 },
+      { id: "sociales", name: "Ciencias Sociales", officialTotal: 20 }
+    ];
+
+    const DEFAULT_COURSES = [
+      {
+        id: "rv",
+        areaId: "competencias",
+        name: "Razonamiento verbal",
+        questionCount: 14,
+        topics: [
+          "Comprensión de lectura",
+          "Vocabulario",
+          "Analogías",
+          "Oraciones incompletas",
+          "Organización de la información"
+        ]
+      },
+      {
+        id: "rm",
+        areaId: "competencias",
+        name: "Razonamiento matemático",
+        questionCount: 14,
+        topics: [
+          "Razonamiento lógico matemático",
+          "Psicotécnico",
+          "Sumas",
+          "Conteo",
+          "Planteo de ecuaciones",
+          "Operadores matemáticos",
+          "Áreas y perímetros de regiones",
+          "Análisis combinatorio"
+        ]
+      },
+      {
+        id: "aritmetica",
+        areaId: "matematicas",
+        name: "Aritmética",
+        questionCount: 6,
+        topics: [
+          "Conjuntos",
+          "Números enteros",
+          "Números racionales",
+          "Razones y proporciones",
+          "Magnitudes proporcionales",
+          "Tanto por ciento",
+          "Regla de tres",
+          "Elementos de estadísticas"
+        ]
+      },
+      {
+        id: "algebra",
+        areaId: "matematicas",
+        name: "Álgebra",
+        questionCount: 9,
+        topics: [
+          "Leyes de exponentes",
+          "Polinomios",
+          "Factorización de polinomios",
+          "Fracciones algebraicas",
+          "Desigualdades e inecuaciones",
+          "Valor absoluto",
+          "Radicación",
+          "Números complejos",
+          "Ecuaciones lineales",
+          "Ecuaciones de segundo grado",
+          "Sistema de ecuaciones lineales",
+          "Ecuaciones polinomiales",
+          "Funciones logarítmicas y exponenciales",
+          "Relaciones y funciones"
+        ]
+      },
+      {
+        id: "geometria",
+        areaId: "matematicas",
+        name: "Geometría",
+        questionCount: 5,
+        topics: [
+          "Conceptos fundamentales",
+          "Triángulos",
+          "Polígonos",
+          "Cuadriláteros",
+          "Circunferencia",
+          "Proporcionalidad y semejanza",
+          "Relaciones métricas",
+          "Áreas",
+          "Geometría del espacio",
+          "Poliedro",
+          "Prisma y pirámide",
+          "Superficies de revolución"
+        ]
+      },
+      {
+        id: "trigonometria",
+        areaId: "matematicas",
+        name: "Trigonometría",
+        questionCount: 5,
+        topics: [
+          "Ángulos trigonométricos y sistema de medición angular",
+          "Sector circular",
+          "Razones trigonométricas de un ángulo agudo",
+          "Resolución de triángulos rectángulos",
+          "Razones trigonométricas de un ángulo en posición normal",
+          "Círculo trigonométrico",
+          "Funciones trigonométricas inversas",
+          "Identidades trigonométricas",
+          "Reducción al primer cuadrante",
+          "Ecuaciones trigonométricas",
+          "Resolución de triángulos oblicuángulos"
+        ]
+      },
+      {
+        id: "biologia",
+        areaId: "naturales",
+        name: "Biología",
+        questionCount: 10,
+        topics: [
+          "Características y composición química de la materia viviente",
+          "La célula: estructura y función",
+          "Bases químicas de la herencia y división celular",
+          "Funciones del organismo",
+          "Metabolismo celular",
+          "Evolución y diversidad de las especies",
+          "Ecología"
+        ]
+      },
+      {
+        id: "quimica",
+        areaId: "naturales",
+        name: "Química",
+        questionCount: 9,
+        topics: [
+          "Materia",
+          "El átomo y su estructura",
+          "Tabla periódica, ley periódica",
+          "Enlaces químicos",
+          "Reacciones químicas",
+          "Compuestos oxigenados",
+          "Unidades químicas de medición",
+          "Propiedades de los compuestos orgánicos",
+          "Compuestos nitrogenados",
+          "Nomenclatura de compuestos inorgánicos",
+          "Hidrocarburos",
+          "Estequiometría"
+        ]
+      },
+      {
+        id: "fisica",
+        areaId: "naturales",
+        name: "Física",
+        questionCount: 8,
+        topics: [
+          "Vectores y escalares",
+          "Cinemática",
+          "Dinámica",
+          "Calorimetría",
+          "Electromagnetismo",
+          "Óptica",
+          "Física moderna"
+        ]
+      },
+      {
+        id: "economia",
+        areaId: "sociales",
+        name: "Economía",
+        questionCount: 6,
+        topics: [
+          "Fundamentos de economía",
+          "Las necesidades y los bienes",
+          "El proceso económico - sectores productivos",
+          "Factores productivos",
+          "La circulación y los mercados",
+          "La teoría de la demanda",
+          "El dinero: definición y funciones",
+          "El sistema financiero",
+          "Banco Central de Reserva del Perú",
+          "El sector externo",
+          "La integración económica regional y mundial",
+          "La balanza de pagos",
+          "El sector público",
+          "El presupuesto público",
+          "Las cuentas nacionales",
+          "Los ciclos económicos - etapas"
+        ]
+      },
+      {
+        id: "historia",
+        areaId: "sociales",
+        name: "Historia del Perú y del mundo",
+        questionCount: 7,
+        topics: [
+          "La Segunda Revolución Industrial (1870-1914)",
+          "El Primer Militarismo (1827-1872)",
+          "Desde el Primer Civilismo hasta la Guerra del Salitre (1879-1883)",
+          "Desde la Primera Guerra Mundial hasta la Revolución Rusa",
+          "Movimientos totalitarios - Segunda Guerra Mundial",
+          "Desde el Oncenio hasta el Tercer Militarismo",
+          "La Guerra Fría (1945-1991) y la Guerra de Corea",
+          "Los años cuarenta y cincuenta en el Perú",
+          "El proceso de descolonización en Asia y África",
+          "La Coexistencia Pacífica (1956-1977)",
+          "Desde el Gobierno de la Convivencia hasta el Belaundismo",
+          "La fase del rebrote y desenlace final de la Guerra Fría",
+          "Gobierno de las Fuerzas Armadas (1968-1980)",
+          "El mundo de la Post Guerra Fría y el Nuevo Orden Mundial",
+          "La década de los años 90 en el Perú",
+          "Los gobiernos del siglo XXI"
+        ]
+      },
+      {
+        id: "geografia",
+        areaId: "sociales",
+        name: "Geografía",
+        questionCount: 7,
+        topics: [
+          "La geografía como ciencia",
+          "El universo",
+          "Evolución de la tierra",
+          "Representaciones gráficas del geosistema y hora internacional",
+          "Morfología del territorio peruano",
+          "Las vertientes hidrográficas peruanas",
+          "El clima y el cambio climático",
+          "Los recursos naturales, ordenamiento territorial",
+          "Geopolítica en el Perú. La población peruana",
+          "Las actividades económicas",
+          "Problemática ambiental en el mundo",
+          "Problemas ambientales en el Perú"
+        ]
+      }
+    ];
+
+    /* ===========================================================
+       3. BANCO INICIAL DE 36 PREGUNTAS (3 POR CURSO)
+       =========================================================== */
+    const DEFAULT_QUESTIONS = [
+      // Razonamiento verbal (3)
+      {
+        id: "rv-1", courseId: "rv", topic: "Vocabulario",
+        question: "Señale el sinónimo más preciso del término FERAZ:",
+        options: ["Árido", "Fértil", "Estéril", "Yermo", "Baldío"],
+        answer: 1,
+        explanation: "Feraz significa fértil o abundante en frutos. Las demás alternativas expresan aridez o falta de productividad."
+      },
+      {
+        id: "rv-2", courseId: "rv", topic: "Analogías",
+        question: "Determine el par análogo correspondiente a: BOTÁNICO : PLANTA ::",
+        options: ["Médico : Hospital", "Entomólogo : Insecto", "Carpintero : Madera", "Arquitecto : Plano", "Juez : Tribunal"],
+        answer: 1,
+        explanation: "La relación base es especialista y ser vivo que estudia. El botánico estudia plantas y el entomólogo estudia insectos."
+      },
+      {
+        id: "rv-3", courseId: "rv", topic: "Oraciones incompletas",
+        question: "Complete con los conectores adecuados: 'La muestra presentaba alta salinidad; _______, se decidió aplicar lavado de suelos _______ recuperar su productividad.'",
+        options: ["sin embargo - porque", "por consiguiente - para", "aunque - mas", "no obstante - sin", "debido a - pero"],
+        answer: 1,
+        explanation: "El primer conector introduce una consecuencia ('por consiguiente') y el segundo expresa finalidad ('para')."
+      },
+
+      // Razonamiento matemático (3)
+      {
+        id: "rm-1", courseId: "rm", topic: "Psicotécnico",
+        question: "Halle el número que continúa en la sucesión: 2, 6, 12, 20, 30, ...",
+        options: ["38", "40", "42", "44", "46"],
+        answer: 2,
+        explanation: "Las diferencias consecutivas son +4, +6, +8, +10. La siguiente diferencia es +12, por lo que 30 + 12 = 42."
+      },
+      {
+        id: "rm-2", courseId: "rm", topic: "Operadores matemáticos",
+        question: "Si a * b = 3a - b + 2, calcule el valor de (4 * 5) * 3.",
+        options: ["20", "23", "26", "29", "31"],
+        answer: 2,
+        explanation: "Primero: 4 * 5 = 3(4) - 5 + 2 = 9. Luego: 9 * 3 = 3(9) - 3 + 2 = 26."
+      },
+      {
+        id: "rm-3", courseId: "rm", topic: "Análisis combinatorio",
+        question: "¿De cuántas maneras diferentes se pueden ordenar 4 libros distintos en un estante?",
+        options: ["12", "16", "20", "24", "32"],
+        answer: 3,
+        explanation: "Es una permutación simple de 4 elementos: P(4) = 4! = 4 x 3 x 2 x 1 = 24."
+      },
+
+      // Aritmética (3)
+      {
+        id: "ari-1", courseId: "aritmetica", topic: "Regla de tres",
+        question: "Si 8 obreros construyen un canal en 15 días, ¿cuántos días tardarán 12 obreros con el mismo rendimiento?",
+        options: ["8 días", "10 días", "12 días", "14 días", "20 días"],
+        answer: 1,
+        explanation: "Son magnitudes inversamente proporcionales: 8 x 15 = 12 x d, entonces d = 120 / 12 = 10 días."
+      },
+      {
+        id: "ari-2", courseId: "aritmetica", topic: "Tanto por ciento",
+        question: "El precio de un equipo es S/ 400. Si recibe dos descuentos sucesivos del 10% y 20%, ¿cuál es el precio final?",
+        options: ["S/ 280", "S/ 288", "S/ 290", "S/ 300", "S/ 320"],
+        answer: 1,
+        explanation: "Tras 10% queda 90% (S/ 360). Tras 20% queda 80% de 360: 0.8 x 360 = S/ 288."
+      },
+      {
+        id: "ari-3", courseId: "aritmetica", topic: "Números enteros",
+        question: "Calcule el máximo común divisor (MCD) de 48 y 72.",
+        options: ["12", "16", "18", "24", "36"],
+        answer: 3,
+        explanation: "48 = 2^4 x 3 y 72 = 2^3 x 3^2. El MCD toma los factores comunes con menor exponente: 2^3 x 3 = 24."
+      },
+
+      // Álgebra (3)
+      {
+        id: "alg-1", courseId: "algebra", topic: "Ecuaciones de segundo grado",
+        question: "En la ecuación cuadrática x² - 9x + 14 = 0, determine la suma de sus raíces.",
+        options: ["-9", "5", "7", "9", "14"],
+        answer: 3,
+        explanation: "Por Cardano-Vieta, la suma de raíces es -b/a = -(-9)/1 = 9."
+      },
+      {
+        id: "alg-2", courseId: "algebra", topic: "Leyes de exponentes",
+        question: "Simplifique E = (3⁴ · 3⁵) / 3⁷.",
+        options: ["3", "6", "9", "27", "81"],
+        answer: 2,
+        explanation: "En el numerador se suman exponentes (4 + 5 = 9) y se resta el del denominador (9 - 7 = 2). Resultado: 3² = 9."
+      },
+      {
+        id: "alg-3", courseId: "algebra", topic: "Funciones logarítmicas y exponenciales",
+        question: "Calcule el valor de log₂(32) + log₃(9).",
+        options: ["5", "6", "7", "8", "9"],
+        answer: 2,
+        explanation: "Como 2⁵ = 32, log₂(32) = 5. Como 3² = 9, log₃(9) = 2. La suma es 5 + 2 = 7."
+      },
+
+      // Geometría (3)
+      {
+        id: "geo-1", courseId: "geometria", topic: "Triángulos",
+        question: "En un triángulo rectángulo, los catetos miden 6 cm y 8 cm. Calcule el perímetro del triángulo.",
+        options: ["18 cm", "20 cm", "24 cm", "28 cm", "30 cm"],
+        answer: 2,
+        explanation: "La hipotenusa es sqrt(6² + 8²) = 10 cm. El perímetro es 6 + 8 + 10 = 24 cm."
+      },
+      {
+        id: "geo-2", courseId: "geometria", topic: "Polígonos",
+        question: "¿Cuánto mide la suma de los ángulos interiores de un hexágono convexo?",
+        options: ["540°", "600°", "720°", "900°", "1080°"],
+        answer: 2,
+        explanation: "La fórmula es 180°(n - 2). Para n = 6: 180°(4) = 720°."
+      },
+      {
+        id: "geo-3", courseId: "geometria", topic: "Áreas",
+        question: "Calcule el área de un trapecio cuyas bases miden 10 m y 14 m, y cuya altura mide 5 m.",
+        options: ["40 m²", "50 m²", "60 m²", "70 m²", "120 m²"],
+        answer: 2,
+        explanation: "Área = [(B + b) / 2] x h = [(14 + 10) / 2] x 5 = 12 x 5 = 60 m²."
+      },
+
+      // Trigonometría (3)
+      {
+        id: "tri-1", courseId: "trigonometria", topic: "Razones trigonométricas de un ángulo agudo",
+        question: "Si θ es un ángulo agudo y sen(θ) = 3/5, determine el valor de tan(θ).",
+        options: ["3/4", "4/3", "4/5", "5/4", "5/3"],
+        answer: 0,
+        explanation: "Si CO = 3 y H = 5, entonces CA = 4. Por definición, tan(θ) = CO / CA = 3/4."
+      },
+      {
+        id: "tri-2", courseId: "trigonometria", topic: "Ángulos trigonométricos y sistema de medición angular",
+        question: "Convierta 120° sexagesimales al sistema radial.",
+        options: ["π/3 rad", "2π/3 rad", "3π/4 rad", "5π/6 rad", "π/2 rad"],
+        answer: 1,
+        explanation: "Multiplicando por π/180°: 120° x (π/180°) = 2π/3 rad."
+      },
+      {
+        id: "tri-3", courseId: "trigonometria", topic: "Sector circular",
+        question: "Calcule la longitud de arco de un sector circular de radio 10 cm y ángulo central de 0,4 radianes.",
+        options: ["2 cm", "4 cm", "6 cm", "8 cm", "10 cm"],
+        answer: 1,
+        explanation: "La longitud de arco es L = θ · R = 0,4 x 10 = 4 cm."
+      },
+
+      // Biología (3)
+      {
+        id: "bio-1", courseId: "biologia", topic: "La célula: estructura y función",
+        question: "¿Qué organela realiza la respiración celular aeróbica y genera la mayor cantidad de ATP en eucariotas?",
+        options: ["Lisosoma", "Mitocondria", "Aparato de Golgi", "Peroxisoma", "Vacuola"],
+        answer: 1,
+        explanation: "La mitocondria alberga el Ciclo de Krebs en su matriz y la fosforilación oxidativa en sus crestas."
+      },
+      {
+        id: "bio-2", courseId: "biologia", topic: "Metabolismo celular",
+        question: "En la fotosíntesis, el Ciclo de Calvin (fase oscura) ocurre específicamente en:",
+        options: ["La membrana tilacoidal", "El estroma del cloroplasto", "La matriz mitocondrial", "El núcleo", "El retículo endoplasmático"],
+        answer: 1,
+        explanation: "La fase luminosa ocurre en los tilacoides y el Ciclo de Calvin se desarrolla en el estroma del cloroplasto."
+      },
+      {
+        id: "bio-3", courseId: "biologia", topic: "Bases químicas de la herencia y división celular",
+        question: "Al cruzar dos individuos heterocigotos (Aa x Aa) con dominancia completa, ¿cuál es la proporción genotípica esperada?",
+        options: ["3 AA : 1 aa", "1 AA : 2 Aa : 1 aa", "2 AA : 1 Aa : 1 aa", "100% Aa", "1 AA : 1 aa"],
+        answer: 1,
+        explanation: "Del cuadro de Punnett se obtienen AA, Aa, Aa y aa, lo que corresponde a 1:2:1."
+      },
+
+      // Química (3)
+      {
+        id: "qui-1", courseId: "quimica", topic: "El átomo y su estructura",
+        question: "Un átomo neutro tiene número de masa A = 35 y 18 neutrones. ¿Cuál es su número atómico (Z)?",
+        options: ["15", "16", "17", "18", "19"],
+        answer: 2,
+        explanation: "Se cumple A = Z + n, por lo que Z = 35 - 18 = 17."
+      },
+      {
+        id: "qui-2", courseId: "quimica", topic: "Enlaces químicos",
+        question: "¿Cuál de las siguientes sustancias presenta predominantemente enlace iónico?",
+        options: ["CO₂", "CH₄", "H₂O", "NaCl", "NH₃"],
+        answer: 3,
+        explanation: "El NaCl se forma por transferencia de electrones entre un metal alcalino (Na) y un no metal halógeno (Cl)."
+      },
+      {
+        id: "qui-3", courseId: "quimica", topic: "Unidades químicas de medición",
+        question: "Se disuelven 2 moles de soluto en agua hasta completar 500 mL de solución. ¿Cuál es la molaridad (M)?",
+        options: ["1 M", "2 M", "3 M", "4 M", "5 M"],
+        answer: 3,
+        explanation: "Volumen = 500 mL = 0,5 L. Molaridad M = n / V = 2 / 0,5 = 4 M."
+      },
+
+      // Física (3)
+      {
+        id: "fis-1", courseId: "fisica", topic: "Vectores y escalares",
+        question: "Dos vectores perpendiculares tienen módulos de 6 u y 8 u. Determine el módulo de su resultante.",
+        options: ["2 u", "7 u", "10 u", "12 u", "14 u"],
+        answer: 2,
+        explanation: "Al formar 90°, R = sqrt(6² + 8²) = sqrt(100) = 10 u."
+      },
+      {
+        id: "fis-2", courseId: "fisica", topic: "Cinemática",
+        question: "Un móvil parte del reposo con MRUV y aceleración de 4 m/s². ¿Qué distancia recorre en 5 segundos?",
+        options: ["20 m", "40 m", "50 m", "80 m", "100 m"],
+        answer: 2,
+        explanation: "Con v₀ = 0, d = (1/2) a t² = 0,5 x 4 x 25 = 50 m."
+      },
+      {
+        id: "fis-3", courseId: "fisica", topic: "Dinámica",
+        question: "Sobre un bloque de 5 kg en una superficie horizontal lisa actúa una fuerza horizontal de 30 N. Calcule su aceleración.",
+        options: ["3 m/s²", "5 m/s²", "6 m/s²", "10 m/s²", "15 m/s²"],
+        answer: 2,
+        explanation: "Por la Segunda Ley de Newton: a = F / m = 30 / 5 = 6 m/s²."
+      },
+
+      // Economía (3)
+      {
+        id: "eco-1", courseId: "economia", topic: "La teoría de la demanda",
+        question: "Según la Ley de la Demanda (ceteris paribus), cuando disminuye el precio de un bien normal, la cantidad demandada:",
+        options: ["Disminuye", "Permanece constante", "Aumenta", "Se anula", "Se vuelve inelástica"],
+        answer: 2,
+        explanation: "Existe una relación inversa entre el precio del bien y su cantidad demandada."
+      },
+      {
+        id: "eco-2", courseId: "economia", topic: "Factores productivos",
+        question: "¿Cuáles son los tres factores productivos clásicos en la economía?",
+        options: ["Dinero, Estado y Mercado", "Tierra, Trabajo y Capital", "Oferta, Demanda y Precio", "Banca, Comercio e Industria", "Impuestos, Gasto y Deuda"],
+        answer: 1,
+        explanation: "Los factores productivos clásicos son Tierra (naturaleza), Trabajo y Capital."
+      },
+      {
+        id: "eco-3", courseId: "economia", topic: "Banco Central de Reserva del Perú",
+        question: "De acuerdo con la Constitución del Perú, la finalidad principal del Banco Central de Reserva del Perú (BCRP) es:",
+        options: ["Recaudar impuestos nacionales", "Preservar la estabilidad monetaria", "Aprobar el presupuesto público", "Otorgar créditos hipotecarios", "Supervisar a las universidades"],
+        answer: 1,
+        explanation: "El BCRP tiene como finalidad preservar la estabilidad monetaria regulando la moneda y el crédito."
+      },
+
+      // Historia del Perú y del mundo (3)
+      {
+        id: "his-1", courseId: "historia", topic: "El Primer Militarismo (1827-1872)",
+        question: "El periodo de la 'Prosperidad Falaz' (1845-1872) en el Perú estuvo sustentado económicamente por la exportación de:",
+        options: ["Caucho", "Guano de las islas", "Algodón", "Cobre", "Petróleo"],
+        answer: 1,
+        explanation: "La explotación y exportación del guano de las islas generó grandes ingresos fiscales durante el siglo XIX."
+      },
+      {
+        id: "his-2", courseId: "historia", topic: "Desde el Oncenio hasta el Tercer Militarismo",
+        question: "¿Qué presidente gobernó el Perú durante el periodo denominado el Oncenio (1919-1930)?",
+        options: ["Nicolás de Piérola", "Augusto B. Leguía", "Óscar R. Benavides", "Luis M. Sánchez Cerro", "Manuel Odría"],
+        answer: 1,
+        explanation: "El segundo gobierno de Augusto B. Leguía se extendió por once años consecutivos (1919-1930)."
+      },
+      {
+        id: "his-3", courseId: "historia", topic: "La Guerra Fría (1945-1991) y la Guerra de Corea",
+        question: "La Guerra Fría fue un enfrentamiento político, ideológico y militar indirecto entre dos superpotencias:",
+        options: ["Reino Unido y Alemania", "Estados Unidos y la Unión Soviética", "Francia y Japón", "China e India", "Italia y España"],
+        answer: 1,
+        explanation: "Tras la Segunda Guerra Mundial, el mundo se polarizó entre el bloque occidental (EE. UU.) y el bloque soviético (URSS)."
+      },
+
+      // Geografía (3)
+      {
+        id: "geg-1", courseId: "geografia", topic: "Morfología del territorio peruano",
+        question: "Según Javier Pulgar Vidal, ¿qué región natural del Perú se ubica entre los 2300 y 3500 m s. n. m.?",
+        options: ["Yunga", "Quechua", "Suni", "Puna", "Janca"],
+        answer: 1,
+        explanation: "La región Quechua se extiende entre 2300 y 3500 m s. n. m. y posee un clima templado propicio para la agricultura."
+      },
+      {
+        id: "geg-2", courseId: "geografia", topic: "Las vertientes hidrográficas peruanas",
+        question: "¿Cuál es la vertiente hidrográfica que abarca la mayor superficie del territorio peruano?",
+        options: ["Vertiente del Pacífico", "Vertiente del Amazonas", "Vertiente del Titicaca", "Cuenca del Madre de Dios", "Vertiente del Atlántico Sur"],
+        answer: 1,
+        explanation: "La vertiente hidrográfica del Amazonas cubre aproximadamente el 75% del territorio nacional."
+      },
+      {
+        id: "geg-3", courseId: "geografia", topic: "Representaciones gráficas del geosistema y hora internacional",
+        question: "¿Qué meridiano sirve de referencia internacional para calcular la longitud geográfica y los husos horarios?",
+        options: ["Trópico de Cáncer", "Meridiano de Greenwich", "Línea Ecuatorial", "Trópico de Capricornio", "Círculo Polar Ártico"],
+        answer: 1,
+        explanation: "El meridiano de Greenwich (0°) divide la Tierra en hemisferio oriental y occidental y define el tiempo universal (UTC)."
+      }
+    ];
+
+    /* ===========================================================
+       4. ESTADO GLOBAL DE LA APLICACIÓN
+       =========================================================== */
+    let state = {
+      view: "inicio",
+      theme: "light",
+      user: null,
+      isAdmin: false,
+      cloudLoaded: false,
+      courses: structuredClone(DEFAULT_COURSES),
+      questions: structuredClone(DEFAULT_QUESTIONS),
+      progress: {
+        totalAnswered: 0,
+        totalCorrect: 0,
+        totalIncorrect: 0,
+        byQuestion: {},
+        simulacros: []
+      },
+      practice: {
+        courseId: "all",
+        topic: "all",
+        queue: [],
+        index: 0,
+        selected: null,
+        answered: false,
+        sessionCorrect: 0,
+        sessionIncorrect: 0
+      },
+      simulacro: {
+        phase: "setup",
+        questions: [],
+        answers: {},
+        currentIndex: 0,
+        secondsLeft: 0,
+        timerId: null
+      },
+      admin: {
+        subtab: "cursos",
+        editingCourseId: null,
+        editingQuestionId: null,
+        filterCourse: "all"
+      }
+    };
+
+    /* ===========================================================
+       5. UTILIDADES GENERALES (TEMA, TOASTS, MODAL, ESCAPE)
+       =========================================================== */
+    function escapeHTML(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function applyTheme() {
+      const root = document.documentElement;
+      const sun = document.getElementById("icon-sun");
+      const moon = document.getElementById("icon-moon");
+      if (state.theme === "dark") {
+        root.classList.add("dark");
+        sun?.classList.remove("hidden");
+        moon?.classList.add("hidden");
+      } else {
+        root.classList.remove("dark");
+        sun?.classList.add("hidden");
+        moon?.classList.remove("hidden");
+      }
+    }
+
+    function toggleTheme() {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      localStorage.setItem("practica_unalm_theme", state.theme);
+      applyTheme();
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      const styles = {
+        success: "bg-unalm-700 text-white border-unalm-800",
+        error: "bg-rose-700 text-white border-rose-800",
+        info: "bg-slate-800 text-white border-slate-700"
+      };
+      const el = document.createElement("div");
+      el.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-lg text-sm font-medium transition-opacity duration-300 ${styles[type] || styles.info}`;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        setTimeout(() => el.remove(), 300);
+      }, 3200);
+    }
+
+    function showConfirmModal(title, message, onConfirm, confirmText = "Aceptar", isDanger = false) {
+      const modal = document.getElementById("custom-modal");
+      document.getElementById("modal-title").textContent = title;
+      document.getElementById("modal-message").textContent = message;
+      const confirmBtn = document.getElementById("modal-confirm");
+      const cancelBtn = document.getElementById("modal-cancel");
+
+      confirmBtn.textContent = confirmText;
+      confirmBtn.className = `px-4 py-2 rounded-lg text-sm font-medium text-white ${
+        isDanger ? "bg-rose-600 hover:bg-rose-700" : "bg-unalm-700 hover:bg-unalm-800"
+      }`;
+      modal.classList.remove("hidden");
+
+      const close = () => {
+        modal.classList.add("hidden");
+        confirmBtn.onclick = null;
+        cancelBtn.onclick = null;
+      };
+      cancelBtn.onclick = close;
+      confirmBtn.onclick = () => {
+        close();
+        onConfirm?.();
+      };
+    }
+
+    function getCourse(courseId) {
+      return state.courses.find(c => c.id === courseId) || { id: courseId, name: courseId, areaId: "competencias", questionCount: 0, topics: [] };
+    }
+
+    function formatScore(num) {
+      return Number(num).toFixed(2);
+    }
+
+    /* ===========================================================
+       6. SINCRONIZACIÓN CON FIRESTORE Y LOCALSTORAGE
+       =========================================================== */
+    function loadLocalProgress() {
+      try {
+        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            state.progress = {
+              totalAnswered: parsed.totalAnswered || 0,
+              totalCorrect: parsed.totalCorrect || 0,
+              totalIncorrect: parsed.totalIncorrect || 0,
+              byQuestion: parsed.byQuestion || {},
+              simulacros: Array.isArray(parsed.simulacros) ? parsed.simulacros : []
+            };
+          }
+        }
+      } catch (e) {
+        console.error("Error leyendo progreso local:", e);
+      }
+    }
+
+    async function saveProgress() {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.progress));
+      } catch (e) {
+        console.error("Error guardando progreso local:", e);
+      }
+
+      if (state.user) {
+        try {
+          await setDoc(doc(db, "users", state.user.uid), {
+            email: state.user.email,
+            displayName: state.user.displayName || "",
+            progress: state.progress,
+            updatedAt: new Date().toISOString()
+          }, { merge: true });
+        } catch (err) {
+          console.error("Error guardando progreso en Firestore:", err);
+          showToast("No se pudo sincronizar el progreso en Firestore. Revisa las reglas de seguridad.", "error");
+        }
+      }
+    }
+
+    async function loadUserProgressFromCloud(uid) {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (snap.exists() && snap.data().progress) {
+          const cloudProg = snap.data().progress;
+          state.progress = {
+            totalAnswered: cloudProg.totalAnswered || 0,
+            totalCorrect: cloudProg.totalCorrect || 0,
+            totalIncorrect: cloudProg.totalIncorrect || 0,
+            byQuestion: cloudProg.byQuestion || {},
+            simulacros: Array.isArray(cloudProg.simulacros) ? cloudProg.simulacros : []
+          };
+        } else {
+          // Si es primera vez en la nube, sube el progreso local actual
+          await saveProgress();
+        }
+      } catch (err) {
+        console.error("Error cargando progreso de Firestore:", err);
+      }
+    }
+
+    async function loadAppDataFromCloud() {
+      try {
+        const [currSnap, qSnap] = await Promise.all([
+          getDoc(doc(db, "appData", "curriculum")),
+          getDoc(doc(db, "appData", "questions"))
+        ]);
+
+        if (currSnap.exists() && Array.isArray(currSnap.data().courses) && currSnap.data().courses.length > 0) {
+          state.courses = currSnap.data().courses;
+        }
+        if (qSnap.exists() && Array.isArray(qSnap.data().items) && qSnap.data().items.length > 0) {
+          state.questions = qSnap.data().items;
+        }
+        state.cloudLoaded = true;
+      } catch (err) {
+        console.warn("Usando datos locales por defecto (Firestore no accesible o vacío):", err);
+      }
+    }
+
+    async function saveCurriculumToCloud() {
+      if (!state.isAdmin) return;
+      try {
+        await setDoc(doc(db, "appData", "curriculum"), {
+          courses: state.courses,
+          updatedAt: new Date().toISOString(),
+          updatedBy: state.user.email
+        });
+        showToast("Temario guardado correctamente en Firestore.", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Error al guardar el temario en Firestore. Verifica las reglas de seguridad.", "error");
+      }
+    }
+
+    async function saveQuestionsToCloud() {
+      if (!state.isAdmin) return;
+      try {
+        await setDoc(doc(db, "appData", "questions"), {
+          items: state.questions,
+          updatedAt: new Date().toISOString(),
+          updatedBy: state.user.email
+        });
+        showToast("Banco de preguntas guardado en Firestore.", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Error al guardar preguntas en Firestore. Verifica las reglas de seguridad.", "error");
+      }
+    }
+
+    async function publishDefaultDataToCloud() {
+      if (!state.isAdmin) return;
+      try {
+        await Promise.all([
+          setDoc(doc(db, "appData", "curriculum"), {
+            courses: state.courses,
+            updatedAt: new Date().toISOString(),
+            updatedBy: state.user.email
+          }),
+          setDoc(doc(db, "appData", "questions"), {
+            items: state.questions,
+            updatedAt: new Date().toISOString(),
+            updatedBy: state.user.email
+          })
+        ]);
+        showToast("Datos iniciales publicados en Firestore correctamente.", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("No se pudo publicar en Firestore. Revisa las reglas de seguridad.", "error");
+      }
+    }
+
+    /* ===========================================================
+       7. AUTENTICACIÓN CON GOOGLE
+       =========================================================== */
+    async function loginWithGoogle() {
+      try {
+        await signInWithPopup(auth, googleProvider);
+        showToast("Sesión iniciada correctamente.", "success");
+      } catch (err) {
+        console.error("Error de autenticación:", err);
+        showToast("No se pudo iniciar sesión con Google. Verifica el dominio autorizado.", "error");
+      }
+    }
+
+    async function logoutGoogle() {
+      try {
+        await signOut(auth);
+        if (state.view === "admin") state.view = "inicio";
+        showToast("Sesión cerrada.", "info");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderAuthControls() {
+      const container = document.getElementById("auth-controls");
+      const adminDesk = document.getElementById("nav-admin-desktop");
+      const adminMob = document.getElementById("nav-admin-mobile");
+      const mobGrid = document.getElementById("mobile-nav-grid");
+
+      if (state.isAdmin) {
+        adminDesk.classList.remove("hidden");
+        adminMob.classList.remove("hidden");
+        mobGrid.classList.remove("grid-cols-4");
+        mobGrid.classList.add("grid-cols-5");
+      } else {
+        adminDesk.classList.add("hidden");
+        adminMob.classList.add("hidden");
+        mobGrid.classList.remove("grid-cols-5");
+        mobGrid.classList.add("grid-cols-4");
+      }
+
+      if (state.user) {
+        const name = state.user.displayName || state.user.email;
+        container.innerHTML = `
+          <div class="hidden sm:flex items-center gap-2 text-xs">
+            <span class="font-medium text-slate-700 dark:text-slate-200 max-w-[150px] truncate">${escapeHTML(name)}</span>
+            ${state.isAdmin ? '<span class="px-2 py-0.5 rounded bg-unalm-700 text-white text-[10px] font-semibold uppercase tracking-wide">Admin</span>' : ''}
+          </div>
+          <button onclick="logoutGoogle()" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            Cerrar sesión
+          </button>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="loginWithGoogle()" class="px-3.5 py-1.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-xs font-medium transition-colors">
+            Iniciar sesión con Google
+          </button>
+        `;
+      }
+    }
+
+    /* ===========================================================
+       8. TEMPORIZADOR DE CUENTA REGRESIVA (28 FEB 2027 08:00 PET)
+       =========================================================== */
+    function updateCountdownDisplay() {
+      const target = new Date(EXAM_DATE_ISO).getTime();
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(val).padStart(2, "0");
+      };
+      const dEl = document.getElementById("cd-days");
+      if (dEl) dEl.textContent = String(days);
+      setEl("cd-hours", hours);
+      setEl("cd-minutes", minutes);
+      setEl("cd-seconds", seconds);
+    }
+
+    setInterval(updateCountdownDisplay, 1000);
+
+    /* ===========================================================
+       9. NAVEGACIÓN Y RENDERIZADO PRINCIPAL
+       =========================================================== */
+    function updateNavStyles() {
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        const active = btn.dataset.nav === state.view;
+        btn.className = `nav-btn ${btn.id === "nav-admin-desktop" && !state.isAdmin ? "hidden" : ""} px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+          active
+            ? "bg-white dark:bg-slate-900 text-unalm-700 dark:text-unalm-200 shadow-sm"
+            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+        }`;
+      });
+      document.querySelectorAll(".mob-nav-btn").forEach(btn => {
+        const active = btn.dataset.navMobile === state.view;
+        btn.className = `mob-nav-btn ${btn.id === "nav-admin-mobile" && !state.isAdmin ? "hidden" : ""} py-2 rounded-lg text-xs font-medium text-center transition-colors ${
+          active
+            ? "bg-unalm-50 dark:bg-unalm-900/40 text-unalm-700 dark:text-unalm-200 font-semibold"
+            : "text-slate-500 dark:text-slate-400"
+        }`;
+      });
+    }
+
+    function navigate(target) {
+      if (target === "admin" && !state.isAdmin) {
+        showToast("Acceso restringido al administrador.", "error");
+        return;
+      }
+      if (state.view === "simulacro" && state.simulacro.phase === "running" && target !== "simulacro") {
+        showConfirmModal(
+          "Salir del simulacro",
+          "Tienes un simulacro en curso. Si sales ahora se perderá este intento.",
+          () => {
+            stopSimulacroTimer();
+            state.simulacro.phase = "setup";
+            state.view = target;
+            render();
+          },
+          "Salir",
+          true
+        );
+        return;
+      }
+      state.view = target;
+      if (target === "practicar" && state.practice.queue.length === 0) {
+        buildPracticeQueue();
+      }
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function render() {
+      renderAuthControls();
+      updateNavStyles();
+      const root = document.getElementById("app-root");
+
+      if (state.view === "inicio") root.innerHTML = renderInicio();
+      else if (state.view === "temario") root.innerHTML = renderTemario();
+      else if (state.view === "practicar") root.innerHTML = renderPracticar();
+      else if (state.view === "simulacro") root.innerHTML = renderSimulacro();
+      else if (state.view === "admin") root.innerHTML = renderAdmin();
+
+      if (state.view === "inicio") updateCountdownDisplay();
+    }
+
+    /* ===========================================================
+       10. VISTA: INICIO
+       =========================================================== */
+    function renderInicio() {
+      const p = state.progress;
+      const accuracy = p.totalAnswered > 0 ? Math.round((p.totalCorrect / p.totalAnswered) * 100) : 0;
+      const netScore = (p.totalCorrect * SCORE_CORRECT) + (p.totalIncorrect * SCORE_INCORRECT);
+
+      const areaBlocks = AREAS.map(area => {
+        const areaCourses = state.courses.filter(c => c.areaId === area.id);
+        const rows = areaCourses.map(course => {
+          const cQs = state.questions.filter(q => q.courseId === course.id);
+          let mastered = 0;
+          cQs.forEach(q => {
+            if (p.byQuestion[q.id]?.lastCorrect) mastered++;
+          });
+          const pct = cQs.length > 0 ? Math.round((mastered / cQs.length) * 100) : 0;
+
+          return `
+            <div onclick="jumpToPractice('${course.id}')" class="cursor-pointer p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-unalm-700 dark:hover:border-unalm-600 bg-white dark:bg-slate-900 transition-colors">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-sm font-medium text-slate-800 dark:text-slate-100">${escapeHTML(course.name)}</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">${course.questionCount} preg. examen</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-1.5">
+                <div class="h-full bg-unalm-700 rounded-full" style="width: ${pct}%"></div>
+              </div>
+              <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                <span>${mastered} de ${cQs.length} dominadas</span>
+                <span class="text-unalm-700 dark:text-unalm-200 font-medium">Practicar</span>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <div class="space-y-2.5">
+            <div class="flex items-baseline justify-between border-b border-slate-200 dark:border-slate-800 pb-1.5">
+              <h3 class="text-sm font-semibold text-slate-900 dark:text-white">${escapeHTML(area.name)}</h3>
+              <span class="text-xs text-slate-500 dark:text-slate-400">${area.officialTotal} preguntas</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${rows}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="space-y-6">
+          ${!state.user ? `
+            <div class="p-3.5 rounded-xl bg-unalm-50 dark:bg-unalm-900/30 border border-unalm-200 dark:border-unalm-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+              <span class="text-slate-700 dark:text-slate-200">Tu progreso se está guardando localmente en este navegador. Inicia sesión con Google para sincronizarlo en la nube.</span>
+              <button onclick="loginWithGoogle()" class="shrink-0 px-3.5 py-1.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-xs font-medium">Iniciar sesión</button>
+            </div>
+          ` : ""}
+
+          <!-- Cuenta Regresiva -->
+          <section class="rounded-2xl bg-unalm-700 text-white p-6 sm:p-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <p class="text-xs uppercase tracking-wider text-unalm-200 font-semibold mb-1">Examen de Admisión UNALM</p>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">28 de febrero de 2027</h1>
+                <p class="text-sm text-unalm-100 mt-1">100 preguntas oficiales • 180 minutos • Puntaje: +1.00 acierto / -0.17 error / 0.00 en blanco</p>
+              </div>
+              <div class="grid grid-cols-4 gap-2.5 text-center shrink-0">
+                <div class="bg-black/20 rounded-xl px-3 py-2.5 min-w-[68px]">
+                  <div id="cd-days" class="text-2xl font-bold tabular-nums">--</div>
+                  <div class="text-[11px] text-unalm-200">Días</div>
+                </div>
+                <div class="bg-black/20 rounded-xl px-3 py-2.5 min-w-[68px]">
+                  <div id="cd-hours" class="text-2xl font-bold tabular-nums">--</div>
+                  <div class="text-[11px] text-unalm-200">Horas</div>
+                </div>
+                <div class="bg-black/20 rounded-xl px-3 py-2.5 min-w-[68px]">
+                  <div id="cd-minutes" class="text-2xl font-bold tabular-nums">--</div>
+                  <div class="text-[11px] text-unalm-200">Min</div>
+                </div>
+                <div class="bg-black/20 rounded-xl px-3 py-2.5 min-w-[68px]">
+                  <div id="cd-seconds" class="text-2xl font-bold tabular-nums">--</div>
+                  <div class="text-[11px] text-unalm-200">Seg</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Estadísticas Generales -->
+          <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Preguntas respondidas</div>
+              <div class="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">${p.totalAnswered}</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Precisión global</div>
+              <div class="mt-1.5 text-2xl font-bold text-unalm-700 dark:text-unalm-200">${accuracy}%</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Puntaje acumulado</div>
+              <div class="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">${formatScore(netScore)}</div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+              <div class="text-xs font-medium text-slate-500 dark:text-slate-400">Banco disponible</div>
+              <div class="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">${state.questions.length}</div>
+            </div>
+          </section>
+
+          <!-- Progreso por Áreas y Cursos -->
+          <section class="space-y-6">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-white">Progreso por Áreas y Cursos</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Selecciona cualquier curso para comenzar a practicar.</p>
+            </div>
+            ${areaBlocks}
+          </section>
+        </div>
+      `;
+    }
+
+    /* ===========================================================
+       11. VISTA: TEMARIO OFICIAL
+       =========================================================== */
+    function renderTemario() {
+      const sections = AREAS.map(area => {
+        const areaCourses = state.courses.filter(c => c.areaId === area.id);
+        const cards = areaCourses.map(course => {
+          const count = state.questions.filter(q => q.courseId === course.id).length;
+          const topicItems = course.topics.map((t, idx) => `
+            <li class="text-xs text-slate-600 dark:text-slate-300 py-1 border-b border-slate-100 dark:border-slate-800/80 last:border-0">
+              ${idx + 1}. ${escapeHTML(t)}
+            </li>
+          `).join("");
+
+          return `
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between gap-2 mb-3">
+                  <div>
+                    <h3 class="font-bold text-base text-slate-900 dark:text-white">${escapeHTML(course.name)}</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">${course.questionCount} preguntas en examen • ${count} en banco</p>
+                  </div>
+                </div>
+                <ul class="mb-4 max-h-56 overflow-y-auto pr-1">
+                  ${topicItems}
+                </ul>
+              </div>
+              <button onclick="jumpToPractice('${course.id}')" class="w-full py-2 px-4 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-xs font-medium transition-colors">
+                Practicar ${escapeHTML(course.name)}
+              </button>
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <section class="space-y-3">
+            <div class="flex items-baseline justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <h2 class="text-base font-bold text-slate-900 dark:text-white">${escapeHTML(area.name)}</h2>
+              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">${area.officialTotal} preguntas oficiales</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${cards}
+            </div>
+          </section>
+        `;
+      }).join("");
+
+      return `
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Temario Oficial de Admisión UNALM</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">4 áreas, 12 cursos, 100 preguntas totales y 180 minutos de duración.</p>
+          </div>
+          ${sections}
+        </div>
+      `;
+    }
+
+    /* ===========================================================
+       12. VISTA: PRACTICAR
+       =========================================================== */
+    function jumpToPractice(courseId) {
+      state.practice.courseId = courseId;
+      state.practice.topic = "all";
+      buildPracticeQueue();
+      state.view = "practicar";
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function setPracticeFilter(courseId, topic) {
+      state.practice.courseId = courseId;
+      state.practice.topic = topic;
+      buildPracticeQueue();
+      render();
+    }
+
+    function buildPracticeQueue() {
+      let list = [...state.questions];
+      if (state.practice.courseId !== "all") {
+        list = list.filter(q => q.courseId === state.practice.courseId);
+      }
+      if (state.practice.topic !== "all") {
+        list = list.filter(q => q.topic === state.practice.topic);
+      }
+      state.practice.queue = shuffle(list);
+      state.practice.index = 0;
+      state.practice.selected = null;
+      state.practice.answered = false;
+    }
+
+    async function selectPracticeOption(optIndex) {
+      if (state.practice.answered) return;
+      const q = state.practice.queue[state.practice.index];
+      if (!q) return;
+
+      state.practice.selected = optIndex;
+      state.practice.answered = true;
+      const isCorrect = optIndex === q.answer;
+
+      state.progress.totalAnswered += 1;
+      if (isCorrect) {
+        state.progress.totalCorrect += 1;
+        state.practice.sessionCorrect += 1;
+      } else {
+        state.progress.totalIncorrect += 1;
+        state.practice.sessionIncorrect += 1;
+      }
+
+      if (!state.progress.byQuestion[q.id]) {
+        state.progress.byQuestion[q.id] = { attempts: 0, correct: 0, lastCorrect: false };
+      }
+      state.progress.byQuestion[q.id].attempts += 1;
+      if (isCorrect) state.progress.byQuestion[q.id].correct += 1;
+      state.progress.byQuestion[q.id].lastCorrect = isCorrect;
+
+      render();
+      await saveProgress();
+    }
+
+    function nextPracticeQuestion() {
+      if (state.practice.index < state.practice.queue.length - 1) {
+        state.practice.index += 1;
+        state.practice.selected = null;
+        state.practice.answered = false;
+        render();
+      } else {
+        showToast("Completaste todas las preguntas de este filtro. Reiniciando orden.", "info");
+        buildPracticeQueue();
+        render();
+      }
+    }
+
+    function renderPracticar() {
+      const selectedCourse = state.courses.find(c => c.id === state.practice.courseId);
+      const topics = selectedCourse ? selectedCourse.topics : [];
+      const sessionScore = (state.practice.sessionCorrect * SCORE_CORRECT) + (state.practice.sessionIncorrect * SCORE_INCORRECT);
+
+      const q = state.practice.queue[state.practice.index];
+      const letters = ["A", "B", "C", "D", "E"];
+
+      return `
+        <div class="max-w-3xl mx-auto space-y-5">
+          <!-- Filtros y puntaje de sesión -->
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row gap-3 sm:items-end justify-between">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+              <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Curso</label>
+                <select onchange="setPracticeFilter(this.value, 'all')" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                  <option value="all" ${state.practice.courseId === "all" ? "selected" : ""}>Todos los cursos</option>
+                  ${state.courses.map(c => `<option value="${c.id}" ${state.practice.courseId === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Tema</label>
+                <select onchange="setPracticeFilter('${state.practice.courseId}', this.value)" ${state.practice.courseId === "all" ? "disabled" : ""} class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50">
+                  <option value="all" ${state.practice.topic === "all" ? "selected" : ""}>Todos los temas</option>
+                  ${topics.map(t => `<option value="${escapeHTML(t)}" ${state.practice.topic === t ? "selected" : ""}>${escapeHTML(t)}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            <div class="text-right shrink-0 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">Puntaje sesión</div>
+              <div class="text-sm font-bold text-unalm-700 dark:text-unalm-200">${formatScore(sessionScore)} pts</div>
+            </div>
+          </div>
+
+          ${!q ? `
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center">
+              <p class="text-sm text-slate-600 dark:text-slate-300">No hay preguntas registradas para el filtro seleccionado.</p>
+            </div>
+          ` : `
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 space-y-5">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-md bg-unalm-50 dark:bg-unalm-900/50 text-unalm-700 dark:text-unalm-200 font-semibold">${escapeHTML(getCourse(q.courseId).name)}</span>
+                  <span class="text-slate-500 dark:text-slate-400">${escapeHTML(q.topic)}</span>
+                </div>
+                <span class="text-slate-500 dark:text-slate-400 font-medium">Pregunta ${state.practice.index + 1} de ${state.practice.queue.length}</span>
+              </div>
+
+              <p class="text-base sm:text-lg font-medium text-slate-900 dark:text-white leading-relaxed">${escapeHTML(q.question)}</p>
+
+              <div class="space-y-2.5">
+                ${q.options.map((opt, idx) => {
+                  let cls = "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-unalm-700 text-slate-800 dark:text-slate-100";
+                  if (state.practice.answered) {
+                    if (idx === q.answer) cls = "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-600 text-emerald-900 dark:text-emerald-100";
+                    else if (idx === state.practice.selected) cls = "bg-rose-50 dark:bg-rose-950/50 border-rose-600 text-rose-900 dark:text-rose-100";
+                    else cls = "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400";
+                  }
+                  return `
+                    <button onclick="selectPracticeOption(${idx})" ${state.practice.answered ? "disabled" : ""} class="w-full text-left p-3.5 rounded-xl border transition-colors flex items-start gap-3 ${cls}">
+                      <span class="w-6 h-6 shrink-0 rounded bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center text-slate-700 dark:text-slate-300">${letters[idx]}</span>
+                      <span class="text-sm sm:text-base">${escapeHTML(opt)}</span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+
+              ${state.practice.answered ? `
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                  <div class="text-sm font-semibold ${state.practice.selected === q.answer ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}">
+                    ${state.practice.selected === q.answer ? "Correcto (+1.00 pt)" : `Incorrecto (-0.17 pts) — Respuesta correcta: ${letters[q.answer]}`}
+                  </div>
+                  <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">${escapeHTML(q.explanation)}</p>
+                </div>
+                <div class="flex justify-end">
+                  <button onclick="nextPracticeQuestion()" class="px-5 py-2.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-sm font-medium">
+                    Siguiente pregunta
+                  </button>
+                </div>
+              ` : ""}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    /* ===========================================================
+       13. VISTA: SIMULACRO CRONOMETRADO
+       =========================================================== */
+    function stopSimulacroTimer() {
+      if (state.simulacro.timerId) {
+        clearInterval(state.simulacro.timerId);
+        state.simulacro.timerId = null;
+      }
+    }
+
+    function formatTimer(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return h > 0
+        ? `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+        : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    function startSimulacro(count, minutes) {
+      const total = count === "all" ? state.questions.length : Math.min(Number(count), state.questions.length);
+      if (total === 0) {
+        showToast("No hay preguntas disponibles para iniciar el simulacro.", "error");
+        return;
+      }
+      stopSimulacroTimer();
+      state.simulacro = {
+        phase: "running",
+        questions: shuffle(state.questions).slice(0, total),
+        answers: {},
+        currentIndex: 0,
+        secondsLeft: minutes * 60,
+        timerId: null
+      };
+
+      state.simulacro.timerId = setInterval(() => {
+        state.simulacro.secondsLeft -= 1;
+        const el = document.getElementById("sim-timer");
+        if (el) el.textContent = formatTimer(Math.max(0, state.simulacro.secondsLeft));
+        if (state.simulacro.secondsLeft <= 0) {
+          finishSimulacro(true);
+        }
+      }, 1000);
+      render();
+    }
+
+    function selectSimulacroOption(optIdx) {
+      const idx = state.simulacro.currentIndex;
+      if (state.simulacro.answers[idx] === optIdx) {
+        delete state.simulacro.answers[idx];
+      } else {
+        state.simulacro.answers[idx] = optIdx;
+      }
+      render();
+    }
+
+    function jumpSimulacro(idx) {
+      state.simulacro.currentIndex = idx;
+      render();
+    }
+
+    function confirmFinishSimulacro() {
+      const answered = Object.keys(state.simulacro.answers).length;
+      const total = state.simulacro.questions.length;
+      showConfirmModal(
+        "Finalizar simulacro",
+        `Has respondido ${answered} de ${total} preguntas (${total - answered} en blanco). Se calificará con +1.00 acierto, -0.17 error y 0.00 en blanco.`,
+        () => finishSimulacro(false),
+        "Entregar"
+      );
+    }
+
+    async function finishSimulacro(auto = false) {
+      stopSimulacroTimer();
+      state.simulacro.phase = "results";
+
+      let correct = 0, incorrect = 0, blank = 0;
+      state.simulacro.questions.forEach((q, idx) => {
+        const ans = state.simulacro.answers[idx];
+        if (ans === undefined) {
+          blank++;
+        } else {
+          const ok = ans === q.answer;
+          state.progress.totalAnswered += 1;
+          if (ok) {
+            correct++;
+            state.progress.totalCorrect += 1;
+          } else {
+            incorrect++;
+            state.progress.totalIncorrect += 1;
+          }
+          if (!state.progress.byQuestion[q.id]) {
+            state.progress.byQuestion[q.id] = { attempts: 0, correct: 0, lastCorrect: false };
+          }
+          state.progress.byQuestion[q.id].attempts += 1;
+          if (ok) state.progress.byQuestion[q.id].correct += 1;
+          state.progress.byQuestion[q.id].lastCorrect = ok;
+        }
+      });
+
+      const score = (correct * SCORE_CORRECT) + (incorrect * SCORE_INCORRECT);
+      state.progress.simulacros.unshift({
+        date: new Date().toISOString(),
+        total: state.simulacro.questions.length,
+        correct,
+        incorrect,
+        blank,
+        score: Number(score.toFixed(2))
+      });
+      state.progress.simulacros = state.progress.simulacros.slice(0, 20);
+
+      if (auto) showToast("Tiempo finalizado. Simulacro calificado automáticamente.", "info");
+      render();
+      await saveProgress();
+    }
+
+    function renderSimulacro() {
+      const sim = state.simulacro;
+      const letters = ["A", "B", "C", "D", "E"];
+
+      if (sim.phase === "setup") {
+        return `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Simulacro Cronometrado UNALM</h1>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Sistema oficial de calificación: +1.00 correcta, -0.17 incorrecta, 0.00 en blanco.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button onclick="startSimulacro(12, 20)" class="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-unalm-700 text-left transition-colors">
+                <div class="font-bold text-base text-slate-900 dark:text-white">12 Preguntas</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">20 minutos • Práctica corta</div>
+              </button>
+              <button onclick="startSimulacro(25, 45)" class="p-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-unalm-700 text-left transition-colors">
+                <div class="font-bold text-base text-slate-900 dark:text-white">25 Preguntas</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">45 minutos • Intermedio</div>
+              </button>
+              <button onclick="startSimulacro('all', 180)" class="p-5 rounded-xl bg-white dark:bg-slate-900 border border-unalm-700 text-left transition-colors">
+                <div class="font-bold text-base text-unalm-700 dark:text-unalm-200">Completo (${state.questions.length})</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">180 minutos • Tiempo oficial</div>
+              </button>
+            </div>
+
+            ${state.progress.simulacros.length > 0 ? `
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Historial reciente</h2>
+                <div class="space-y-2">
+                  ${state.progress.simulacros.slice(0, 5).map(s => `
+                    <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                      <span class="text-slate-500 dark:text-slate-400">${new Date(s.date).toLocaleDateString("es-PE")} • ${s.total} preguntas</span>
+                      <span class="font-semibold text-slate-800 dark:text-slate-200">${formatScore(s.score)} pts (${s.correct} bien, ${s.incorrect} mal, ${s.blank} blanco)</span>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            ` : ""}
+          </div>
+        `;
+      }
+
+      if (sim.phase === "running") {
+        const q = sim.questions[sim.currentIndex];
+        const chosen = sim.answers[sim.currentIndex];
+        return `
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-8 space-y-4">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Pregunta ${sim.currentIndex + 1} de ${sim.questions.length}</span>
+                <div class="flex items-center gap-3">
+                  <span id="sim-timer" class="font-mono text-sm font-bold text-slate-900 dark:text-white">${formatTimer(sim.secondsLeft)}</span>
+                  <button onclick="confirmFinishSimulacro()" class="px-3.5 py-1.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-xs font-medium">Finalizar</button>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 space-y-5">
+                <div class="text-xs text-slate-500 dark:text-slate-400">${escapeHTML(getCourse(q.courseId).name)} • ${escapeHTML(q.topic)}</div>
+                <p class="text-base sm:text-lg font-medium text-slate-900 dark:text-white leading-relaxed">${escapeHTML(q.question)}</p>
+                <div class="space-y-2.5">
+                  ${q.options.map((opt, idx) => `
+                    <button onclick="selectSimulacroOption(${idx})" class="w-full text-left p-3.5 rounded-xl border transition-colors flex items-start gap-3 ${
+                      chosen === idx
+                        ? "bg-unalm-50 dark:bg-unalm-900/40 border-unalm-700 text-unalm-900 dark:text-unalm-100"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-unalm-600"
+                    }">
+                      <span class="w-6 h-6 shrink-0 rounded text-xs font-bold flex items-center justify-center ${
+                        chosen === idx ? "bg-unalm-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      }">${letters[idx]}</span>
+                      <span class="text-sm sm:text-base">${escapeHTML(opt)}</span>
+                    </button>
+                  `).join("")}
+                </div>
+                <p class="text-[11px] text-slate-400">Haz clic de nuevo sobre la opción marcada si deseas dejarla en blanco (0.00 pts).</p>
+                <div class="flex justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button onclick="jumpSimulacro(${sim.currentIndex - 1})" ${sim.currentIndex === 0 ? "disabled" : ""} class="px-4 py-2 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 disabled:opacity-40">Anterior</button>
+                  ${sim.currentIndex < sim.questions.length - 1
+                    ? `<button onclick="jumpSimulacro(${sim.currentIndex + 1})" class="px-4 py-2 rounded-lg text-xs font-medium bg-unalm-700 text-white">Siguiente</button>`
+                    : `<button onclick="confirmFinishSimulacro()" class="px-4 py-2 rounded-lg text-xs font-medium bg-unalm-700 text-white">Entregar examen</button>`
+                  }
+                </div>
+              </div>
+            </div>
+
+            <aside class="lg:col-span-4">
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sticky top-20">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Navegador</h3>
+                <div class="grid grid-cols-5 gap-2">
+                  ${sim.questions.map((_, i) => `
+                    <button onclick="jumpSimulacro(${i})" class="h-9 rounded-lg text-xs font-semibold border transition-colors ${
+                      sim.answers[i] !== undefined
+                        ? "bg-unalm-700 text-white border-unalm-700"
+                        : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                    } ${i === sim.currentIndex ? "ring-2 ring-slate-900 dark:ring-white" : ""}">
+                      ${i + 1}
+                    </button>
+                  `).join("")}
+                </div>
+              </div>
+            </aside>
+          </div>
+        `;
+      }
+
+      // Resultados
+      let correct = 0, incorrect = 0, blank = 0;
+      const byCourse = {};
+      sim.questions.forEach((q, idx) => {
+        if (!byCourse[q.courseId]) byCourse[q.courseId] = { total: 0, correct: 0 };
+        byCourse[q.courseId].total++;
+        const ans = sim.answers[idx];
+        if (ans === undefined) blank++;
+        else if (ans === q.answer) { correct++; byCourse[q.courseId].correct++; }
+        else incorrect++;
+      });
+      const score = (correct * SCORE_CORRECT) + (incorrect * SCORE_INCORRECT);
+
+      return `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="bg-unalm-700 text-white rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="text-xs uppercase tracking-wider text-unalm-200 font-semibold">Puntaje Final</div>
+              <div class="text-4xl font-bold mt-1">${formatScore(score)} <span class="text-lg font-normal text-unalm-200">/ ${formatScore(sim.questions.length)}</span></div>
+              <div class="text-xs text-unalm-100 mt-2">Correctas: ${correct} (+${formatScore(correct)}) • Incorrectas: ${incorrect} (${formatScore(incorrect * SCORE_INCORRECT)}) • En blanco: ${blank}</div>
+            </div>
+            <button onclick="state.simulacro.phase='setup'; render();" class="px-5 py-2.5 rounded-lg bg-white text-unalm-800 text-sm font-semibold self-start sm:self-center">Nuevo simulacro</button>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white mb-3">Desglose por curso</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              ${Object.entries(byCourse).map(([cId, d]) => `
+                <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex justify-between text-xs">
+                  <span class="font-medium text-slate-700 dark:text-slate-200">${escapeHTML(getCourse(cId).name)}</span>
+                  <span class="font-bold text-unalm-700 dark:text-unalm-200">${d.correct} / ${d.total}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white">Revisión detallada</h2>
+            ${sim.questions.map((q, idx) => {
+              const ans = sim.answers[idx];
+              const label = ans === undefined ? "En blanco (0.00)" : (ans === q.answer ? "Correcta (+1.00)" : "Incorrecta (-0.17)");
+              return `
+                <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-sm">
+                  <div class="flex justify-between text-xs text-slate-500">
+                    <span>#${idx + 1} • ${escapeHTML(getCourse(q.courseId).name)}</span>
+                    <span class="font-semibold">${label}</span>
+                  </div>
+                  <p class="font-medium text-slate-900 dark:text-white">${escapeHTML(q.question)}</p>
+                  <p class="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">Clave correcta: ${letters[q.answer]}) ${escapeHTML(q.options[q.answer])}</p>
+                  <p class="text-xs text-slate-600 dark:text-slate-300">${escapeHTML(q.explanation)}</p>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    /* ===========================================================
+       14. VISTA: PANEL DE ADMINISTRACIÓN (EXCLUSIVO ADMIN_EMAIL)
+       =========================================================== */
+    function setAdminSubtab(tab) {
+      state.admin.subtab = tab;
+      state.admin.editingCourseId = null;
+      state.admin.editingQuestionId = null;
+      render();
+    }
+
+    // --- Gestión de Cursos y Temas ---
+    async function handleSaveCourse(e) {
+      e.preventDefault();
+      const form = e.target;
+      const name = form.name.value.trim();
+      const areaId = form.areaId.value;
+      const questionCount = Number(form.questionCount.value) || 0;
+      const topics = form.topics.value.split("\n").map(t => t.trim()).filter(Boolean);
+
+      if (!name) return;
+
+      if (state.admin.editingCourseId) {
+        const idx = state.courses.findIndex(c => c.id === state.admin.editingCourseId);
+        if (idx !== -1) {
+          state.courses[idx] = { ...state.courses[idx], name, areaId, questionCount, topics };
+        }
+        state.admin.editingCourseId = null;
+      } else {
+        const id = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-") + "-" + Date.now().toString().slice(-4);
+        state.courses.push({ id, areaId, name, questionCount, topics });
+      }
+      render();
+      await saveCurriculumToCloud();
+    }
+
+    function editCourse(courseId) {
+      state.admin.editingCourseId = courseId;
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteCourse(courseId) {
+      showConfirmModal(
+        "Eliminar curso",
+        "Se eliminará este curso del temario en Firestore. Las preguntas asociadas permanecerán en el banco hasta que las reasignes o elimines.",
+        async () => {
+          state.courses = state.courses.filter(c => c.id !== courseId);
+          render();
+          await saveCurriculumToCloud();
+        },
+        "Eliminar",
+        true
+      );
+    }
+
+    // --- Gestión de Preguntas ---
+    async function handleSaveQuestion(e) {
+      e.preventDefault();
+      const form = e.target;
+      const courseId = form.courseId.value;
+      const topic = form.topic.value.trim() || "General";
+      const question = form.question.value.trim();
+      const options = [0, 1, 2, 3, 4].map(i => form[`opt${i}`].value.trim());
+      const answer = Number(form.answer.value);
+      const explanation = form.explanation.value.trim();
+
+      if (!question || options.some(o => !o)) {
+        showToast("Completa el enunciado y las 5 alternativas.", "error");
+        return;
+      }
+
+      if (state.admin.editingQuestionId) {
+        const idx = state.questions.findIndex(q => q.id === state.admin.editingQuestionId);
+        if (idx !== -1) {
+          state.questions[idx] = { ...state.questions[idx], courseId, topic, question, options, answer, explanation };
+        }
+        state.admin.editingQuestionId = null;
+      } else {
+        state.questions.unshift({
+          id: "q-" + Date.now(),
+          courseId,
+          topic,
+          question,
+          options,
+          answer,
+          explanation
+        });
+      }
+      render();
+      await saveQuestionsToCloud();
+    }
+
+    function editQuestion(qId) {
+      state.admin.editingQuestionId = qId;
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteQuestion(qId) {
+      showConfirmModal(
+        "Eliminar pregunta",
+        "Esta pregunta se eliminará permanentemente de Firestore.",
+        async () => {
+          state.questions = state.questions.filter(q => q.id !== qId);
+          render();
+          await saveQuestionsToCloud();
+        },
+        "Eliminar",
+        true
+      );
+    }
+
+    function exportQuestionsJSON() {
+      const blob = new Blob([JSON.stringify(state.questions, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "banco-preguntas-unalm.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importQuestionsJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const arr = JSON.parse(ev.target.result);
+          if (!Array.isArray(arr)) throw new Error("Formato inválido");
+          let added = 0;
+          arr.forEach((item, i) => {
+            if (item.question && Array.isArray(item.options) && item.options.length === 5) {
+              state.questions.unshift({
+                id: item.id || `imp-${Date.now()}-${i}`,
+                courseId: item.courseId || state.courses[0]?.id || "rv",
+                topic: item.topic || "General",
+                question: String(item.question),
+                options: item.options.map(String),
+                answer: Math.min(4, Math.max(0, Number(item.answer) || 0)),
+                explanation: item.explanation || ""
+              });
+              added++;
+            }
+          });
+          render();
+          await saveQuestionsToCloud();
+          showToast(`Se importaron ${added} preguntas.`, "success");
+        } catch {
+          showToast("El archivo JSON no tiene un formato válido.", "error");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderAdmin() {
+      if (!state.isAdmin) {
+        return `<div class="p-8 text-center text-sm text-slate-500">Acceso restringido al administrador.</div>`;
+      }
+
+      const isCursos = state.admin.subtab === "cursos";
+      const editingCourse = state.admin.editingCourseId ? state.courses.find(c => c.id === state.admin.editingCourseId) : null;
+      const editingQuestion = state.admin.editingQuestionId ? state.questions.find(q => q.id === state.admin.editingQuestionId) : null;
+
+      const filteredQs = state.admin.filterCourse === "all"
+        ? state.questions
+        : state.questions.filter(q => q.courseId === state.admin.filterCourse);
+
+      return `
+        <div class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Panel de Administración</h1>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Sesión de administrador: ${escapeHTML(state.user.email)}</p>
+            </div>
+            <button onclick="publishDefaultDataToCloud()" class="px-4 py-2 rounded-lg border border-unalm-700 text-unalm-700 dark:text-unalm-200 hover:bg-unalm-50 dark:hover:bg-unalm-900/30 text-xs font-semibold">
+              Publicar datos iniciales en Firestore
+            </button>
+          </div>
+
+          <!-- Sub-pestañas -->
+          <div class="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+            <button onclick="setAdminSubtab('cursos')" class="px-4 py-2 rounded-lg text-sm font-medium ${isCursos ? "bg-unalm-700 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}">
+              Cursos y Temas (${state.courses.length})
+            </button>
+            <button onclick="setAdminSubtab('preguntas')" class="px-4 py-2 rounded-lg text-sm font-medium ${!isCursos ? "bg-unalm-700 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}">
+              Preguntas (${state.questions.length})
+            </button>
+          </div>
+
+          ${isCursos ? `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
+                <h2 class="font-bold text-base mb-4">${editingCourse ? "Editar curso" : "Agregar nuevo curso"}</h2>
+                <form onsubmit="handleSaveCourse(event)" class="space-y-3.5">
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Nombre del curso</label>
+                    <input name="name" required value="${escapeHTML(editingCourse?.name || "")}" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-medium mb-1">Área</label>
+                      <select name="areaId" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                        ${AREAS.map(a => `<option value="${a.id}" ${editingCourse?.areaId === a.id ? "selected" : ""}>${escapeHTML(a.name)}</option>`).join("")}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-medium mb-1">N.° preguntas examen</label>
+                      <input name="questionCount" type="number" min="0" value="${editingCourse?.questionCount ?? 5}" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Temas (uno por línea)</label>
+                    <textarea name="topics" rows="8" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">${escapeHTML((editingCourse?.topics || []).join("\n"))}</textarea>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="submit" class="flex-1 py-2.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-sm font-medium">
+                      ${editingCourse ? "Guardar cambios" : "Crear curso"}
+                    </button>
+                    ${editingCourse ? `<button type="button" onclick="state.admin.editingCourseId=null; render();" class="px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-sm">Cancelar</button>` : ""}
+                  </div>
+                </form>
+              </div>
+
+              <div class="lg:col-span-7 space-y-2.5">
+                ${state.courses.map(c => `
+                  <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+                    <div>
+                      <div class="font-semibold text-sm text-slate-900 dark:text-white">${escapeHTML(c.name)}</div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400">${c.topics.length} temas • ${c.questionCount} preguntas oficiales</div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                      <button onclick="editCourse('${c.id}')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700">Editar</button>
+                      <button onclick="deleteCourse('${c.id}')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">Eliminar</button>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          ` : `
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4">
+                <h2 class="font-bold text-base">${editingQuestion ? "Editar pregunta" : "Nueva pregunta"}</h2>
+                <form onsubmit="handleSaveQuestion(event)" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Curso</label>
+                    <select name="courseId" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                      ${state.courses.map(c => `<option value="${c.id}" ${editingQuestion?.courseId === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Tema</label>
+                    <input name="topic" required value="${escapeHTML(editingQuestion?.topic || "")}" placeholder="Nombre del tema" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Enunciado</label>
+                    <textarea name="question" rows="3" required class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">${escapeHTML(editingQuestion?.question || "")}</textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="block text-xs font-medium">Alternativas (A - E)</label>
+                    ${["A", "B", "C", "D", "E"].map((l, i) => `
+                      <input name="opt${i}" required placeholder="Alternativa ${l}" value="${escapeHTML(editingQuestion?.options?.[i] || "")}" class="w-full px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+                    `).join("")}
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Respuesta correcta</label>
+                    <select name="answer" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                      ${["A", "B", "C", "D", "E"].map((l, i) => `<option value="${i}" ${editingQuestion?.answer === i ? "selected" : ""}>Alternativa ${l}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium mb-1">Explicación</label>
+                    <textarea name="explanation" rows="2" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">${escapeHTML(editingQuestion?.explanation || "")}</textarea>
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="submit" class="flex-1 py-2.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-sm font-medium">
+                      ${editingQuestion ? "Guardar cambios" : "Guardar pregunta"}
+                    </button>
+                    ${editingQuestion ? `<button type="button" onclick="state.admin.editingQuestionId=null; render();" class="px-4 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-sm">Cancelar</button>` : ""}
+                  </div>
+                </form>
+
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+                  <button onclick="exportQuestionsJSON()" class="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Exportar JSON</button>
+                  <label class="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+                    Importar JSON
+                    <input type="file" accept=".json" onchange="importQuestionsJSON(event)" class="hidden" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <select onchange="state.admin.filterCourse=this.value; render();" class="px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                    <option value="all">Todos los cursos (${state.questions.length})</option>
+                    ${state.courses.map(c => `<option value="${c.id}" ${state.admin.filterCourse === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
+                  </select>
+                  <span class="text-xs text-slate-500">${filteredQs.length} mostradas</span>
+                </div>
+
+                <div class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
+                  ${filteredQs.map(q => `
+                    <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-[11px] font-semibold text-unalm-700 dark:text-unalm-200">${escapeHTML(getCourse(q.courseId).name)} • ${escapeHTML(q.topic)}</div>
+                        <p class="text-xs text-slate-800 dark:text-slate-100 mt-1 line-clamp-2">${escapeHTML(q.question)}</p>
+                      </div>
+                      <div class="flex gap-1.5 shrink-0">
+                        <button onclick="editQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs bg-slate-100 dark:bg-slate-800">Editar</button>
+                        <button onclick="deleteQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">Eliminar</button>
+                      </div>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    /* ===========================================================
+       15. EXPONER FUNCIONES AL ÁMBITO GLOBAL E INICIALIZAR
+       =========================================================== */
+    Object.assign(window, {
+      state,
+      navigate,
+      toggleTheme,
+      loginWithGoogle,
+      logoutGoogle,
+      jumpToPractice,
+      setPracticeFilter,
+      selectPracticeOption,
+      nextPracticeQuestion,
+      startSimulacro,
+      selectSimulacroOption,
+      jumpSimulacro,
+      confirmFinishSimulacro,
+      setAdminSubtab,
+      handleSaveCourse,
+      editCourse,
+      deleteCourse,
+      handleSaveQuestion,
+      editQuestion,
+      deleteQuestion,
+      exportQuestionsJSON,
+      importQuestionsJSON,
+      publishDefaultDataToCloud,
+      render
+    });
+
+    async function init() {
+      const savedTheme = localStorage.getItem("practica_unalm_theme");
+      state.theme = savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      applyTheme();
+      loadLocalProgress();
+
+      await loadAppDataFromCloud();
+      buildPracticeQueue();
+      render();
+
+      onAuthStateChanged(auth, async (user) => {
+        state.user = user;
+        state.isAdmin = Boolean(user && user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+        if (user) {
+          await loadUserProgressFromCloud(user.uid);
+        } else {
+          loadLocalProgress();
+        }
+        render();
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
