@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Práctica UNALM</title>
+<style>
+:root{--bg:#f2f5ef;--cd:#fff;--tx:#18271e;--mu:#667568;--pr:#1b6b45;--sf:#e3f0e7;--bd:#d9e1d6;--no:#b93a2c;--ye:#f2c200}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1611;--cd:#17221b;--tx:#e5ede7;--mu:#92a296;--pr:#4cc088;--sf:#203829;--bd:#293a2e;--no:#f0796c}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 Georgia,"Times New Roman",serif;background:var(--bg);color:var(--tx)}
+button,select,input,textarea,nav,header,small,.ch{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--pr);color:#fff;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+header b{font-size:18px}
+header button{background:transparent;color:#fff;border-color:#fff8}
+nav{display:flex;gap:2px;flex-wrap:wrap}
+nav button{background:transparent;color:#fff;border:0;border-bottom:3px solid transparent;border-radius:0;padding:6px 10px}
+nav button.on{border-color:var(--ye);font-weight:600}
+main{max-width:920px;margin:0 auto;padding:16px 16px 40px}
+h2{margin:20px 0 10px;font-size:22px}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:0 0 10px}
+.click{cursor:pointer}.click:hover{border-color:var(--pr)}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.g2 .card{margin:0}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.g3 .card{margin:0}
+.st{text-align:center;color:var(--mu);font-family:system-ui,sans-serif}.st b{display:block;font:600 28px Georgia,serif;color:var(--pr)}
+.mu{color:var(--mu)}
+.bar{height:6px;background:var(--sf);border-radius:4px;margin:8px 0 2px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pr)}
+button,select,input,textarea{font-size:14px;color:var(--tx);background:var(--cd);border:1px solid var(--bd);border-radius:8px;padding:7px 10px}
+button{cursor:pointer}button:hover{border-color:var(--pr)}
+button.pr{background:var(--pr);color:#fff;border-color:var(--pr)}
+:focus-visible{outline:2px solid var(--ye);outline-offset:2px}
+textarea{width:100%;min-height:84px;font-family:Georgia,serif;font-size:15px}
+.tb{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+details{background:var(--cd);border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;padding:10px 14px}
+summary{cursor:pointer}
+.row{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap}.row>span:first-child{flex:1;min-width:170px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.ch{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--sf)}.ch.g{border:1px solid var(--pr)}.ch a{cursor:pointer;margin-left:5px;font-weight:700}
+.act{display:flex;gap:8px;align-items:center}.act small{flex:1}
+.op{display:block;width:100%;text-align:left;margin:7px 0;padding:11px 13px;font-family:Georgia,serif;font-size:15px}
+.op.ok{border-color:var(--pr);background:var(--sf)}.op.bad{border-color:var(--no)}
+.ex{background:var(--sf);border-radius:8px;padding:11px;margin-top:10px}
+.fr{display:flex;gap:8px;align-items:center;margin:7px 0}.fr input[type=text]{flex:1}
+@media(max-width:560px){.g3{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><b>Práctica UNALM</b><nav id="nav"></nav><div id="us"></div></header>
+<main id="app"></main>
+<script type="module">
+// 1) Pega aquí la configuración de tu proyecto de Firebase (ver instrucciones). Si la dejas vacía, la web funciona en modo local.
+const FB={apiKey:"",authDomain:"",projectId:"",appId:""};
+const cloud=!!FB.apiKey;
+const ADMIN="tu-correo@gmail.com"; // 2) Tu Gmail: solo tú podrás editar temas y preguntas
+const isA=()=>!cloud||(S.u?.email||"").toLowerCase()==ADMIN.toLowerCase();
+
+const C=[
+["verbal","Razonamiento verbal","Comprensión de lectura|Vocabulario|Analogías|Oraciones incompletas|Organización de la información"],
+["rm","Razonamiento matemático","Razonamiento lógico matemático|Psicotécnico|Sumas|Conteo|Planteo de ecuaciones|Operadores matemáticos|Áreas y perímetros|Análisis combinatorio"],
+["ari","Aritmética","Conjuntos|Números enteros|Números racionales|Razones y proporciones|Magnitudes proporcionales|Tanto por ciento|Regla de tres|Estadística"],
+["alg","Álgebra","Leyes de exponentes|Polinomios|Factorización|Fracciones algebraicas|Desigualdades e inecuaciones|Valor absoluto|Radicación|Números complejos|Ecuaciones lineales|Ecuaciones de segundo grado|Sistemas de ecuaciones|Ecuaciones polinomiales|Logaritmos y exponenciales|Relaciones y funciones"],
+["geo","Geometría","Conceptos fundamentales|Triángulos|Polígonos|Cuadriláteros|Circunferencia|Proporcionalidad y semejanza|Relaciones métricas|Áreas|Geometría del espacio|Poliedros|Prisma y pirámide|Superficies de revolución"],
+["tri","Trigonometría","Ángulos y sistemas de medición|Sector circular|Razones trigonométricas del ángulo agudo|Triángulos rectángulos|Ángulo en posición normal|Círculo trigonométrico|Funciones trigonométricas inversas|Identidades trigonométricas|Reducción al primer cuadrante|Ecuaciones trigonométricas|Triángulos oblicuángulos"],
+["bio","Biología","Composición química de la materia viva|La célula|Herencia y división celular|Funciones del organismo|Metabolismo celular|Evolución y diversidad|Ecología"],
+["qui","Química","Materia|El átomo|Tabla periódica|Enlaces químicos|Reacciones químicas|Compuestos oxigenados|Unidades químicas|Propiedades de compuestos orgánicos|Compuestos nitrogenados|Nomenclatura inorgánica|Hidrocarburos|Estequiometría"],
+["fis","Física","Vectores y escalares|Cinemática|Dinámica|Calorimetría|Electromagnetismo|Óptica|Física moderna"],
+["eco","Economía","Fundamentos de economía|Necesidades y bienes|Proceso económico|Factores productivos|Circulación y mercados|Demanda, oferta y equilibrio|Dinero e inflación|Sistema financiero|BCRP y SBS|Sector externo|Integración económica|Balanza de pagos|Sector público|Presupuesto público|Cuentas nacionales|Ciclos económicos"],
+["his","Historia del Perú y del mundo","Segunda Revolución Industrial|Primer militarismo|Primer civilismo y Guerra del Salitre|Primera Guerra Mundial y Revolución Rusa|Totalitarismos y Segunda Guerra Mundial|Oncenio y tercer militarismo|Guerra Fría y Guerra de Corea|Perú años 40 y 50|Descolonización y Revolución China|Coexistencia pacífica|Convivencia y Belaundismo|Final de la Guerra Fría|Gobierno militar y años 80|Nuevo orden mundial|Década de 1990|Gobiernos del siglo XXI"],
+["geg","Geografía","La geografía como ciencia|El universo|Evolución de la Tierra|Representaciones y hora mundial|Morfología del Perú|Vertientes hidrográficas|Clima y cambio climático|Recursos naturales|Geopolítica y población|Actividades económicas|Ambiente en el mundo|Ambiente en el Perú"]];
+const CO=C.map(([c,n,s])=>({c,n,t:s.split("|").map((x,i)=>({i:c+i,n:x}))}));
+const T={},CN={};
+function build(){for(const k in T)delete T[k];C.length=0;CO.forEach(o=>{C.push([o.c,o.n]);CN[o.c]=o.n;o.t.forEach(x=>T[x.i]={n:x.n,c:o.c})})}
+build();
+const topicsMap=()=>Object.fromEntries(CO.map(o=>[o.c,o.t]));
+const applyTopics=m=>{if(m)CO.forEach(o=>{if(m[o.c])o.t=m[o.c]})};
+const tids=c=>Object.keys(T).filter(k=>T[k].c==c);
+const W={verbal:14,rm:14,ari:6,alg:9,geo:5,tri:5,bio:10,qui:9,fis:8,eco:6,his:7,geg:7}; // preguntas por curso según el temario
+const EXAM="2027-02-28"; // fecha de tu examen (AAAA-MM-DD)
+const PRL=["","muy probable","casi seguro"]; // prioridad según la frecuencia en exámenes anteriores
+const PR={verbal0:2,verbal1:2,verbal2:2,verbal3:1,verbal4:2,rm0:1,rm1:2,rm2:2,rm4:2,rm5:1,rm6:2,rm7:1,ari2:1,ari5:1,ari7:1,alg3:1,alg7:1,geo1:1,geo5:1,geo7:1,tri2:1,tri7:1,tri10:1,bio1:2,bio2:1,bio3:1,bio4:1,bio5:1,bio6:2,qui3:1,qui4:1,qui6:2,qui8:1,qui10:1,fis0:1,fis2:2,fis3:1,fis4:1,fis5:2,his4:1,his5:1,his6:1};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const S={u:null,Q:[],m:{tags:[],hist:[]},v:"home",f:{},run:null,ed:null};
+
+let fs,au,auth,db;
+if(cloud){
+ const B="https://www.gstatic.com/firebasejs/10.12.2/";
+ const [A,a,f]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-auth.js"),import(B+"firebase-firestore.js")]);
+ const app=A.initializeApp(FB);au=a;fs=f;auth=a.getAuth(app);db=f.getFirestore(app);
+}
+
+// ---------- Almacenamiento (Firestore o navegador) ----------
+const P=()=>"users/"+S.u.uid;
+const persist=()=>localStorage.setItem("unalm_local",JSON.stringify({Q:S.Q,m:S.m,topics:topicsMap()}));
+async function load(){
+ S.Q=[];S.m={tags:[],hist:[]};
+ if(cloud){
+  if(!S.u)return;
+  const [a,b,c]=await Promise.all([fs.getDocs(fs.collection(db,"bank")),fs.getDoc(fs.doc(db,"config/main")),fs.getDoc(fs.doc(db,P()+"/prog/main"))]);
+  S.Q=a.docs.map(d=>d.data());const g=b.exists()?b.data():{},p=c.exists()?c.data():{};S.m={tags:g.tags||[],hist:p.hist||[]};S.prog=p.st||{};applyTopics(g.topics);S.Q.forEach(q=>q.st=S.prog[q.id]||{ok:0,no:0,last:null});
+  build();
+ }else{try{const d=JSON.parse(localStorage.getItem("unalm_local")||"{}");S.Q=d.Q||[];S.m=d.m||S.m;applyTopics(d.topics)}catch(e){}build()}
+}
+async function saveQ(q){const i=S.Q.findIndex(x=>x.id==q.id);i<0?S.Q.push(q):S.Q[i]=q;if(cloud){const{st,...d}=q;await fs.setDoc(fs.doc(db,"bank/"+q.id),d)}else persist()}
+async function delQ(id){S.Q=S.Q.filter(x=>x.id!=id);cloud?await fs.deleteDoc(fs.doc(db,"bank/"+id)):persist()}
+async function saveM(){if(!cloud)return persist();if(isA())await fs.setDoc(fs.doc(db,"config/main"),{tags:S.m.tags,topics:topicsMap()})}
+async function saveP(q){if(!cloud)return persist();if(q)S.prog[q.id]=q.st;await fs.setDoc(fs.doc(db,P()+"/prog/main"),{st:S.prog,hist:S.m.hist||[]})}
+
+// ---------- Utilidades ----------
+const eff=q=>{const s=new Set([q.t]);(q.tg||[]).forEach(n=>(S.m.tags.find(x=>x.n==n)?.t||[]).forEach(t=>s.add(t)));return s};
+const acc=a=>{let o=0,n=0;a.forEach(q=>{o+=q.st?.ok||0;n+=(q.st?.ok||0)+(q.st?.no||0)});return{o,n,p:n?Math.round(100*o/n):null}};
+const flt=f=>S.Q.filter(q=>(!f.c||q.c==f.c)&&(!f.t||eff(q).has(f.t))&&(!f.g||(q.tg||[]).includes(f.g))&&(!f.k||q.src?.k==f.k)&&(!f.fail||q.st?.last===false)&&(!f.s||(q.p+" "+q.o.join(" ")).toLowerCase().includes(f.s.toLowerCase())));
+const bar=p=>`<div class="bar"><i style="width:${p||0}%"></i></div><small class="mu">${p==null?"sin intentos":p+"% de acierto"}</small>`;
+const oc=(v,all="Todos los cursos")=>`<option value="">${all}</option>`+C.map(([c,n])=>`<option value="${c}"${v==c?" selected":""}>${n}</option>`).join("");
+const ot=(c,v,all="Todos los temas")=>`<option value="">${all}</option>`+(c?tids(c).map(t=>`<option value="${t}"${v==t?" selected":""}>${esc(T[t].n)}</option>`).join(""):"");
+const og=v=>`<option value="">Todas las etiquetas</option>`+S.m.tags.map(g=>`<option${v==g.n?" selected":""}>${esc(g.n)}</option>`).join("");
+const okS=(v,all="Toda fuente")=>`<option value="">${all}</option>`+["examen","simulacro","guía"].map(k=>`<option${v==k?" selected":""}>${k}</option>`).join("");
+const filt=()=>{const f=S.f;return `<select data-f="c">${oc(f.c)}</select><select data-f="t">${ot(f.c,f.t)}</select><select data-f="g">${og(f.g)}</select><select data-f="k">${okS(f.k)}</select>`};
+const stats=()=>{const a=acc(S.Q);return `<div class="g3"><div class="card st"><b>${S.Q.length}</b>preguntas</div><div class="card st"><b>${a.n}</b>intentos</div><div class="card st"><b>${a.p==null?"–":a.p+"%"}</b>de acierto</div></div>`};
+const draft=()=>({isNew:1,id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),c:S.f.c||"",t:S.f.t||"",p:"",o:["","","","",""],a:-1,e:"",src:{k:"",y:""},tg:[],st:{ok:0,no:0,last:null}});
+const sync=()=>{const q=S.ed;if(!q||!$("#fp"))return;q.p=$("#fp").value;q.e=$("#fe").value;q.o=[0,1,2,3,4].map(i=>$("#fo"+i).value);const r=document.querySelector("[name=fa]:checked");q.a=r?+r.value:-1;q.src={k:$("#fk").value,y:$("#fy").value}};
+
+// ---------- Vistas ----------
+const lst=()=>{const a=flt(S.f);return a.length?a.map(q=>{const r=acc([q]);return `<div class="card"><div>${esc(q.p.slice(0,200))}${q.p.length>200?"…":""}</div><div class="chips"><span class="ch">${CN[q.c]}: ${esc(T[q.t]?.n)}</span>${q.src?.k?`<span class="ch">${q.src.k} ${esc(q.src.y)}</span>`:""}${(q.tg||[]).map(g=>`<span class="ch g">#${esc(g)}</span>`).join("")}</div><div class="act"><small class="mu">${r.n?`${r.o} de ${r.n} aciertos`:"sin intentos"}</small>${isA()?`<button data-a="edit" data-id="${q.id}">Editar</button><button data-a="del" data-id="${q.id}">Borrar</button>`:""}</div></div>`}).join(""):`<p class="mu">No hay preguntas con estos filtros. Crea una con “Nueva pregunta”.</p>`};
+
+const form=()=>{const q=S.ed;return `<div class="card"><h2 style="margin-top:0">${q.isNew?"Nueva pregunta":"Editar pregunta"}</h2>
+<div class="tb"><select data-e="c">${oc(q.c,"Curso…")}</select><select data-e="t">${ot(q.c,q.t,"Tema…")}</select><select id="fk">${okS(q.src?.k,"Fuente…")}</select><input type="text" id="fy" style="width:150px" placeholder="Año, ej. 2026 II" value="${esc(q.src?.y)}"></div>
+<textarea id="fp" placeholder="Enunciado">${esc(q.p)}</textarea>
+${[0,1,2,3,4].map(i=>`<div class="fr"><input type="radio" name="fa" value="${i}"${q.a===i?" checked":""} aria-label="Correcta ${"ABCDE"[i]}"><b>${"ABCDE"[i]}</b><input type="text" id="fo${i}" value="${esc(q.o[i])}" placeholder="Alternativa ${"ABCDE"[i]}"></div>`).join("")}
+<small class="mu">Marca el círculo de la alternativa correcta. Las alternativas vacías se ignoran.</small>
+<textarea id="fe" placeholder="Explicación o solución (opcional)" style="margin-top:10px">${esc(q.e)}</textarea>
+<h3>Etiquetas</h3><div class="chips">${q.tg.map(g=>`<span class="ch g">#${esc(g)} <a data-a="rmtag" data-g="${esc(g)}">×</a></span>`).join("")}</div>
+<div class="fr"><input type="text" id="ft" list="dl" placeholder="Escribe o elige una etiqueta"><datalist id="dl">${S.m.tags.map(g=>`<option value="${esc(g.n)}">`).join("")}</datalist><button data-a="addtag">Añadir etiqueta</button></div>
+<small class="mu">Una etiqueta nueva se conecta con el tema de esta pregunta. Puedes cambiar sus temas en la pestaña Etiquetas.</small>
+<div class="tb" style="margin-top:14px"><button class="pr" data-a="save">Guardar pregunta</button><button data-a="cancel">Cancelar</button></div></div>`};
+
+const V={
+home(){const d=Math.ceil((new Date(EXAM+"T00:00")-Date.now())/864e5);return (d>0?`<p class="mu">Faltan <b>${d}</b> días para el examen.</p>`:"")+stats()+`<h2>Cursos</h2><div class="g2">`+C.map(([c,n])=>{const q=S.Q.filter(x=>x.c==c);return `<div class="card click" data-a="course" data-c="${c}"><b>${n}</b><div class="mu">${W[c]} en el examen, ${q.length} en tu banco</div>${bar(acc(q).p)}</div>`}).join("")+"</div>"},
+tem(){return `<p class="mu">Las etiquetas “casi seguro” y “muy probable” salen de la frecuencia de temas en los exámenes anteriores.</p>`+C.map(([c,n])=>`<details${S.f.oc==c?" open":""}><summary><b>${n}</b> <span class="mu">${W[c]} preguntas en el examen, ${S.Q.filter(q=>q.c==c).length} en tu banco</span></summary>`+tids(c).map(t=>{const q=S.Q.filter(x=>eff(x).has(t)),p=acc(q).p;return `<div class="row"><span>${esc(T[t].n)}${PR[t]?` <span class="ch${PR[t]>1?" g":""}">${PRL[PR[t]]}</span>`:""}</span><small class="mu">${q.length} preguntas, ${p==null?"sin intentos":p+"% de acierto"}</small><button data-a="ver" data-t="${t}">Ver</button><button data-a="prac" data-t="${t}">Practicar</button>${isA()?`<button data-a="rent" data-t="${t}">Renombrar</button><button data-a="delt" data-t="${t}">Eliminar</button>`:""}</div>`}).join("")+(isA()?`<div class="row"><button data-a="addt" data-c="${c}">Agregar tema</button></div>`:"")+"</details>").join("")},
+preg(){if(S.ed)return form();return `<div class="tb">${filt()}<input id="sr" placeholder="Buscar texto…" value="${esc(S.f.s||"")}">${isA()?`<button class="pr" data-a="new">Nueva pregunta</button>`:""}</div><div id="list">${lst()}</div>`},
+tags(){return `<p class="mu">Conecta cada etiqueta con temas del temario: sus preguntas también cuentan en esos temas.</p><div class="fr"><input type="text" id="nt" placeholder="Nueva etiqueta, ej. fracciones, trampa, fórmula"><button class="pr" data-a="newtag">Crear etiqueta</button></div>`+S.m.tags.map(g=>`<div class="card"><b>#${esc(g.n)}</b> <small class="mu">${S.Q.filter(q=>(q.tg||[]).includes(g.n)).length} preguntas</small><div class="chips">${g.t.map(t=>`<span class="ch">${CN[T[t].c]}: ${esc(T[t].n)} <a data-a="unlink" data-g="${esc(g.n)}" data-t="${t}">×</a></span>`).join("")||'<small class="mu">Sin temas conectados</small>'}</div><div class="fr"><select data-l="${esc(g.n)}"><option value="">Conectar con un tema…</option>${C.map(([c,n])=>`<optgroup label="${n}">${tids(c).map(t=>`<option value="${t}">${esc(T[t].n)}</option>`).join("")}</optgroup>`).join("")}</select><button data-a="deltag" data-g="${esc(g.n)}">Eliminar etiqueta</button></div></div>`).join("")},
+prac(){const r=S.run;
+ if(!r)return `<div class="card"><h2 style="margin-top:0">Practicar</h2><div class="tb">${filt()}</div><div class="fr"><label>Preguntas <input type="number" id="nq" value="10" min="1" max="100" style="width:80px"></label><label><input type="checkbox" data-f="fail"${S.f.fail?" checked":""}> Solo las que fallé</label></div><p class="mu">${flt(S.f).length} preguntas disponibles con estos filtros.</p><button class="pr" data-a="start">Empezar</button></div><div class="card"><b>Simulacro</b><p class="mu">Arma un examen con las proporciones del temario (hasta ${Object.values(W).reduce((a,b)=>a+b)} preguntas, según tu banco), con cronómetro y sin ver las respuestas hasta el final.</p><button data-a="sim">Empezar simulacro</button></div>`;
+ if(r.i>=r.l.length)return `<div class="card st"><b>${r.ok} de ${r.l.length}</b>correctas (${Math.round(100*r.ok/r.l.length)}%)${r.det||""}<div class="tb" style="justify-content:center;margin-top:12px"><button class="pr" data-a="nav" data-v="res">Ver resultados</button><button data-a="nav" data-v="prac">Otra práctica</button></div></div>`;
+ const q=S.Q.find(x=>x.id==r.l[r.i]),s=r.sel;
+ return `<div class="card"><small class="mu">Pregunta ${r.i+1} de ${r.l.length}. ${CN[q.c]}: ${esc(T[q.t]?.n)}</small>${r.sim?` <small id="tm"></small>`:""}<p>${esc(q.p).replace(/\n/g,"<br>")}</p>`+q.o.map((t,i)=>`<button class="op${s!=null?(i==q.a?" ok":i==s?" bad":""):""}" data-a="opt" data-i="${i}"${s!=null?" disabled":""}><b>${"ABCDE"[i]}.</b> ${esc(t)}</button>`).join("")+(r.sim?`<div class="tb"><button data-a="skip">Saltar</button><button data-a="fin">Terminar simulacro</button></div>`:"")+(s!=null?`<div class="ex"><b>${s==q.a?"Correcto":"Incorrecto"}</b>${q.e?`<br>${esc(q.e).replace(/\n/g,"<br>")}`:""}</div><div class="tb" style="margin-top:12px"><button class="pr" data-a="next">${r.i+1<r.l.length?"Siguiente":"Terminar"}</button></div>`:"")+"</div>"},
+res(){const tp=Object.keys(T).map(t=>({t,...acc(S.Q.filter(x=>eff(x).has(t)))})).filter(x=>x.n).sort((x,y)=>x.p-y.p).slice(0,10),h=(S.m.hist||[]).slice(-12).reverse();
+ return stats()+`<h2>Por curso</h2>`+C.map(([c,n])=>{const r=acc(S.Q.filter(q=>q.c==c));return `<div class="card"><b>${n}</b> <small class="mu">${r.n} intentos</small>${bar(r.p)}</div>`}).join("")
+ +`<h2>Temas a reforzar</h2>`+(tp.length?tp.map(x=>`<div class="row"><span>${CN[T[x.t].c]}: ${esc(T[x.t].n)}</span><small>${x.p}% (${x.o} de ${x.n})</small><button data-a="prac" data-t="${x.t}">Practicar</button></div>`).join(""):`<p class="mu">Responde preguntas para ver tus temas más débiles.</p>`)
+ +`<h2>Últimos intentos</h2>`+h.map(x=>{const q=S.Q.find(y=>y.id==x.q);return q?`<div class="row"><span>${x.ok?"✔":"✘"} ${esc(q.p.slice(0,80))}</span><small class="mu">${new Date(x.t).toLocaleDateString("es-PE")}</small></div>`:""}).join("")
+ +`<div class="tb" style="margin-top:14px"><button data-a="fails">Repasar las que fallé</button></div>`}
+};
+
+const NAV=[["home","Inicio"],["tem","Temario"],["preg","Preguntas"],["tags","Etiquetas"],["prac","Practicar"],["res","Resultados"]];
+function render(){
+ $("#nav").innerHTML=NAV.filter(([v])=>v!="tags"||isA()).map(([v,n])=>`<button class="${S.v==v?"on":""}" data-a="nav" data-v="${v}">${n}</button>`).join("");
+ $("#us").innerHTML=cloud?(S.u?`<small>${esc(S.u.displayName||S.u.email)}${isA()?" (admin)":""}</small> <button data-a="out">Salir</button>`:""):`<small>Modo local: se guarda solo en este navegador</small>`;
+ $("#app").innerHTML=cloud&&!S.u?`<div class="card st"><h2>Inicia sesión para guardar tu progreso</h2><button class="pr" data-a="in">Entrar con Google</button></div>`:V[S.v]();
+}
+
+async function finish(){const r=S.run;if(r.done)return;r.done=1;clearInterval(S.tm);r.i=r.l.length;const by={};
+ for(const id of r.l){const a=r.ans[id];if(a==null)continue;const q=S.Q.find(x=>x.id==id),g=a==q.a;if(g)r.ok++;
+  by[q.c]=by[q.c]||[0,0];by[q.c][1]++;if(g)by[q.c][0]++;
+  q.st={ok:(q.st?.ok||0)+(g?1:0),no:(q.st?.no||0)+(g?0:1),last:g};
+  S.m.hist=[...(S.m.hist||[]),{t:Date.now(),q:id,ok:g}].slice(-300);if(S.prog)S.prog[q.id]=q.st}
+ r.det=Object.entries(by).map(([c,[o,n]])=>`<div class="row"><span>${CN[c]}</span><small>${o} de ${n}</small></div>`).join("")+`<small class="mu">Sin responder: ${r.l.filter(id=>r.ans[id]==null).length}</small>`;await saveP();
+ await saveM();render()}
+const tick=()=>{const r=S.run;if(!r||!r.sim||r.done){clearInterval(S.tm);return}const s=Math.max(0,Math.round((r.end-Date.now())/1000)),el=$("#tm");if(el)el.textContent="Tiempo: "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0");if(!s)finish()};
+
+// ---------- Acciones ----------
+const H={
+ nav(d){clearInterval(S.tm);S.v=d.v;S.f={};S.run=null;S.ed=null;render()},
+ course(d){S.v="tem";S.f={oc:d.c};render()},
+ ver(d){S.v="preg";S.f={c:T[d.t].c,t:d.t};render()},
+ prac(d){S.v="prac";S.f={c:T[d.t].c,t:d.t};S.run=null;render()},
+ fails(){S.v="prac";S.f={fail:true};S.run=null;render()},
+ new(){S.ed=draft();render()},
+ edit(d){const q=S.Q.find(x=>x.id==d.id);S.ed={...q,o:[...q.o,"","","","",""].slice(0,5),tg:[...(q.tg||[])]};render()},
+ async del(d){if(confirm("¿Borrar esta pregunta?")){await delQ(d.id);render()}},
+ cancel(){S.ed=null;render()},
+ addtag(){sync();const n=$("#ft").value.trim();if(!n)return;if(!S.ed.tg.includes(n))S.ed.tg.push(n);if(!S.m.tags.some(g=>g.n==n))S.m.tags.push({n,t:S.ed.t?[S.ed.t]:[]});render()},
+ rmtag(d){sync();S.ed.tg=S.ed.tg.filter(g=>g!=d.g);render()},
+ async save(){sync();const q=S.ed,o=[],m=[];
+  q.o.forEach((t,i)=>{if(t.trim()){m[i]=o.length;o.push(t.trim())}});
+  if(!q.p.trim()||!q.c||!q.t||o.length<2||m[q.a]==null)return alert("Completa el enunciado, el curso y el tema, al menos 2 alternativas y marca la correcta.");
+  const{isNew,...d}=q;d.p=d.p.trim();d.o=o;d.a=m[q.a];
+  await saveQ(d);await saveM();S.ed=null;render()},
+ newtag(){const n=$("#nt").value.trim();if(n&&!S.m.tags.some(g=>g.n==n))S.m.tags.push({n,t:[]});saveM();render()},
+ unlink(d){const g=S.m.tags.find(x=>x.n==d.g);g.t=g.t.filter(t=>t!=d.t);saveM();render()},
+ async deltag(d){if(!confirm("¿Eliminar la etiqueta #"+d.g+"? Se quitará de sus preguntas."))return;
+  S.m.tags=S.m.tags.filter(g=>g.n!=d.g);
+  for(const q of S.Q.filter(x=>(x.tg||[]).includes(d.g))){q.tg=q.tg.filter(g=>g!=d.g);await saveQ(q)}
+  await saveM();render()},
+ start(){const n=Math.max(1,+$("#nq").value||10),l=flt(S.f).map(q=>q.id).sort(()=>Math.random()-.5).slice(0,n);
+  if(!l.length)return alert("No hay preguntas con esos filtros.");S.run={l,i:0,sel:null,ok:0};render()},
+ async opt(d){const r=S.run;if(r.sel!=null)return;const q=S.Q.find(x=>x.id==r.l[r.i]),i=+d.i,good=i==q.a;if(r.sim){r.ans[q.id]=i;r.i++;return r.i>=r.l.length?finish():render()}r.sel=i;if(good)r.ok++;
+  q.st={ok:(q.st?.ok||0)+(good?1:0),no:(q.st?.no||0)+(good?0:1),last:good};
+  S.m.hist=[...(S.m.hist||[]),{t:Date.now(),q:q.id,ok:good}].slice(-300);
+  render();await saveP(q)},
+ next(){S.run.i++;S.run.sel=null;render()},
+ sim(){const l=[];C.forEach(([c])=>l.push(...S.Q.filter(q=>q.c==c).sort(()=>Math.random()-.5).slice(0,W[c]).map(q=>q.id)));
+  if(l.length<5)return alert("Carga al menos 5 preguntas para armar un simulacro.");
+  S.run={l,i:0,sel:null,ok:0,sim:1,ans:{},end:Date.now()+Math.round(l.length*1.8*60000)};render();clearInterval(S.tm);S.tm=setInterval(tick,1000);tick()},
+ skip(){S.run.i++;S.run.i>=S.run.l.length?finish():render();tick()},
+ fin(){if(confirm("¿Terminar el simulacro ahora?"))finish()},
+ addt(d){const n=(prompt("Nombre del nuevo tema")||"").trim();if(!n)return;CO.find(o=>o.c==d.c).t.push({i:d.c+"n"+Date.now().toString(36),n});build();saveM();render()},
+ rent(d){const x=CO.find(o=>o.c==T[d.t].c).t.find(x=>x.i==d.t),n=(prompt("Nuevo nombre del tema",x.n)||"").trim();if(!n)return;x.n=n;build();saveM();render()},
+ delt(d){const k=S.Q.filter(q=>q.t==d.t).length;if(k)return alert("Este tema tiene "+k+" preguntas. Muévelas a otro tema o bórralas primero.");if(!confirm("¿Eliminar este tema?"))return;const o=CO.find(o=>o.c==T[d.t].c);o.t=o.t.filter(x=>x.i!=d.t);S.m.tags.forEach(g=>g.t=g.t.filter(x=>x!=d.t));build();saveM();render()},
+ in:()=>au.signInWithPopup(auth,new au.GoogleAuthProvider()).catch(e=>alert("No se pudo iniciar sesión: "+e.code)),
+ out:()=>au.signOut(auth)
+};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&H[b.dataset.a])H[b.dataset.a](b.dataset)});
+document.addEventListener("change",e=>{const t=e.target,d=t.dataset;
+ if(d.f){S.f[d.f]=t.type=="checkbox"?t.checked:t.value;if(d.f=="c")S.f.t="";render()}
+ else if(d.e){sync();S.ed[d.e]=t.value;if(d.e=="c")S.ed.t="";render()}
+ else if(d.l!=null&&t.value){const g=S.m.tags.find(x=>x.n==d.l);if(g&&!g.t.includes(t.value))g.t.push(t.value);saveM();render()}
+});
+document.addEventListener("input",e=>{if(e.target.id=="sr"){S.f.s=e.target.value;$("#list").innerHTML=lst()}});
+
+if(cloud)au.onAuthStateChanged(auth,async u=>{S.u=u;await load();render()});
+else{await load();render()}
+</script>
+</body></html>
