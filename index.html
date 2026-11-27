@@ -132,6 +132,57 @@
   </div>
 
   <!-- =========================================================
+       MODAL DE IMPORTACIÓN INTELIGENTE DE JSON
+       ========================================================= -->
+  <div id="json-import-modal" onclick="closeJsonImportModal()" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    <div onclick="event.stopPropagation()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 class="font-bold text-base text-slate-900 dark:text-white">Importar preguntas desde JSON</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sube un archivo .json o pega directamente el arreglo JSON generado.</p>
+        </div>
+        <button type="button" onclick="closeJsonImportModal()" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300">
+          Cerrar
+        </button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+        <span class="text-xs text-slate-600 dark:text-slate-300">Cargar desde archivo local:</span>
+        <label class="px-3.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-center">
+          Seleccionar archivo .json
+          <input id="json-import-file" type="file" accept=".json" onchange="handleJsonFileSelect(event)" class="hidden" />
+        </label>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Contenido JSON</label>
+        <textarea id="json-import-textarea" rows="8" oninput="validateJsonImportInput()" placeholder='[{"courseId": "biologia", "topic": "La célula: estructura y función", "question": "...", "options": ["A", "B", "C", "D", "E"], "answer": 0, "explanation": "..."}]' class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-unalm-700"></textarea>
+      </div>
+
+      <div id="json-import-preview" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400">
+        Pega el contenido JSON o selecciona un archivo para validar las preguntas antes de guardar.
+      </div>
+
+      <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+        <input id="json-skip-duplicates" type="checkbox" checked class="rounded border-slate-300 text-unalm-700 focus:ring-unalm-700" />
+        <span>Al sumar, omitir preguntas cuyo enunciado ya exista exactamente en el banco</span>
+      </label>
+
+      <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-end gap-2">
+        <button type="button" onclick="closeJsonImportModal()" class="px-4 py-2 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">
+          Cancelar
+        </button>
+        <button id="btn-json-replace" type="button" disabled onclick="executeJsonImport('replace')" class="px-4 py-2 rounded-lg text-xs font-medium border border-rose-600 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 disabled:opacity-40 disabled:pointer-events-none">
+          Reemplazar todas las preguntas
+        </button>
+        <button id="btn-json-append" type="button" disabled onclick="executeJsonImport('append')" class="px-4 py-2 rounded-lg text-xs font-medium bg-unalm-700 hover:bg-unalm-800 text-white disabled:opacity-40 disabled:pointer-events-none">
+          Sumar a las preguntas actuales
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        LÓGICA DE LA APLICACIÓN Y FIREBASE (SDK MODULAR v10)
        ========================================================= -->
   <script type="module">
@@ -703,6 +754,7 @@
       practice: {
         courseId: "all",
         topic: "all",
+        onlyErrors: false,
         queue: [],
         index: 0,
         selected: null,
@@ -722,7 +774,13 @@
         subtab: "cursos",
         editingCourseId: null,
         editingQuestionId: null,
-        filterCourse: "all"
+        filterCourse: "all",
+        filterTopic: "all",
+        searchQuery: "",
+        lastCourseId: "rv",
+        lastTopic: "",
+        customTopicMode: false,
+        importParsed: null
       }
     };
 
@@ -844,7 +902,10 @@
     }
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeImageLightbox();
+      if (e.key === "Escape") {
+        closeImageLightbox();
+        closeJsonImportModal();
+      }
     });
 
     function renderImageBlock(url, altText = "Gráfico de apoyo") {
@@ -912,62 +973,90 @@
         const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === "object") {
-            state.progress = {
-              totalAnswered: parsed.totalAnswered || 0,
-              totalCorrect: parsed.totalCorrect || 0,
-              totalIncorrect: parsed.totalIncorrect || 0,
-              byQuestion: parsed.byQuestion || {},
-              simulacros: Array.isArray(parsed.simulacros) ? parsed.simulacros : []
-            };
-          }
+          state.progress = {
+            totalAnswered: Number(parsed.totalAnswered) || 0,
+            totalCorrect: Number(parsed.totalCorrect) || 0,
+            totalIncorrect: Number(parsed.totalIncorrect) || 0,
+            byQuestion: parsed.byQuestion && typeof parsed.byQuestion === "object" ? parsed.byQuestion : {},
+            simulacros: Array.isArray(parsed.simulacros) ? parsed.simulacros : []
+          };
+        } else {
+          state.progress = {
+            totalAnswered: 0,
+            totalCorrect: 0,
+            totalIncorrect: 0,
+            byQuestion: {},
+            simulacros: []
+          };
         }
-      } catch (e) {
-        console.error("Error leyendo progreso local:", e);
+      } catch (err) {
+        console.warn("Error cargando progreso local:", err);
       }
     }
 
-    async function saveProgress() {
+    function saveLocalProgress() {
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state.progress));
-      } catch (e) {
-        console.error("Error guardando progreso local:", e);
-      }
-
-      if (state.user) {
-        try {
-          await setDoc(doc(db, "users", state.user.uid), {
-            email: state.user.email,
-            displayName: state.user.displayName || "",
-            progress: state.progress,
-            updatedAt: new Date().toISOString()
-          }, { merge: true });
-        } catch (err) {
-          console.error("Error guardando progreso en Firestore:", err);
-          showToast("No se pudo sincronizar el progreso en Firestore. Revisa las reglas de seguridad.", "error");
-        }
+      } catch (err) {
+        console.warn("Error guardando progreso local:", err);
       }
     }
 
     async function loadUserProgressFromCloud(uid) {
       try {
         const snap = await getDoc(doc(db, "users", uid));
-        if (snap.exists() && snap.data().progress) {
-          const cloudProg = snap.data().progress;
+        if (snap.exists()) {
+          const data = snap.data();
           state.progress = {
-            totalAnswered: cloudProg.totalAnswered || 0,
-            totalCorrect: cloudProg.totalCorrect || 0,
-            totalIncorrect: cloudProg.totalIncorrect || 0,
-            byQuestion: cloudProg.byQuestion || {},
-            simulacros: Array.isArray(cloudProg.simulacros) ? cloudProg.simulacros : []
+            totalAnswered: Number(data.totalAnswered) || 0,
+            totalCorrect: Number(data.totalCorrect) || 0,
+            totalIncorrect: Number(data.totalIncorrect) || 0,
+            byQuestion: data.byQuestion && typeof data.byQuestion === "object" ? data.byQuestion : {},
+            simulacros: Array.isArray(data.simulacros) ? data.simulacros : []
           };
+          saveLocalProgress();
         } else {
-          // Si es primera vez en la nube, sube el progreso local actual
           await saveProgress();
         }
       } catch (err) {
         console.error("Error cargando progreso de Firestore:", err);
       }
+    }
+
+    async function saveProgress() {
+      saveLocalProgress();
+      if (!state.user) return;
+      try {
+        await setDoc(doc(db, "users", state.user.uid), {
+          ...state.progress,
+          email: state.user.email || "",
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (err) {
+        console.error("Error guardando progreso en Firestore:", err);
+      }
+    }
+
+    function normalizeQuestionItem(raw, fallbackId) {
+      const validCourse = state.courses.find(c => c.id === (raw.courseId || raw.course));
+      const courseId = validCourse ? validCourse.id : (state.courses[0]?.id || "rv");
+      const rawOptions = Array.isArray(raw.options) ? raw.options : (Array.isArray(raw.alternativas) ? raw.alternativas : []);
+      const options = [0, 1, 2, 3, 4].map(i => String(rawOptions[i] ?? "").trim());
+      const rawOptImgs = Array.isArray(raw.optionImages) ? raw.optionImages : [];
+      const optionImages = [0, 1, 2, 3, 4].map(i => String(rawOptImgs[i] ?? "").trim());
+
+      return {
+        id: raw.id ? String(raw.id) : fallbackId,
+        courseId,
+        topic: String(raw.topic || raw.tema || "General").trim(),
+        question: String(raw.question || raw.enunciado || "").trim(),
+        image: String(raw.image || raw.imageUrl || "").trim(),
+        options,
+        optionImages,
+        answer: Math.min(4, Math.max(0, Number(raw.answer ?? raw.respuesta ?? 0) || 0)),
+        explanation: String(raw.explanation || raw.resolucion || "").trim(),
+        explanationImage: String(raw.explanationImage || raw.explanationImageUrl || "").trim()
+      };
     }
 
     async function loadAppDataFromCloud() {
@@ -979,9 +1068,18 @@
 
         if (currSnap.exists() && Array.isArray(currSnap.data().courses) && currSnap.data().courses.length > 0) {
           state.courses = currSnap.data().courses;
+          if (!state.courses.some(c => c.id === state.admin.lastCourseId)) {
+            state.admin.lastCourseId = state.courses[0].id;
+          }
         }
-        if (qSnap.exists() && Array.isArray(qSnap.data().items) && qSnap.data().items.length > 0) {
-          state.questions = qSnap.data().items;
+        if (qSnap.exists()) {
+          const qData = qSnap.data();
+          const rawList = Array.isArray(qData.items)
+            ? qData.items
+            : (Array.isArray(qData.questions) ? qData.questions : (Array.isArray(qData) ? qData : null));
+          if (rawList && rawList.length > 0) {
+            state.questions = rawList.map((item, idx) => normalizeQuestionItem(item, `q-cloud-${idx}`));
+          }
         }
         state.cloudLoaded = true;
       } catch (err) {
@@ -993,6 +1091,7 @@
       if (!state.isAdmin) return;
       try {
         await setDoc(doc(db, "appData", "curriculum"), {
+          areas: AREAS,
           courses: state.courses,
           updatedAt: new Date().toISOString(),
           updatedBy: state.user.email
@@ -1019,11 +1118,35 @@
       }
     }
 
+    function confirmPublishDefaultData() {
+      if (!state.isAdmin) return;
+      showConfirmModal(
+        "Atención: Sobrescribir base de datos",
+        `Esta acción reemplazará todo el temario y las ${state.questions.length} preguntas actuales en Firestore por las 36 preguntas iniciales de prueba. Se recomienda exportar un respaldo JSON antes de continuar.`,
+        () => {
+          setTimeout(() => {
+            showConfirmModal(
+              "Confirmación final",
+              `¿Confirmas que deseas eliminar tus ${state.questions.length} preguntas actuales en la nube y restaurar los datos iniciales?`,
+              () => publishDefaultDataToCloud(),
+              "Sí, sobrescribir todo",
+              true
+            );
+          }, 120);
+        },
+        "Continuar",
+        true
+      );
+    }
+
     async function publishDefaultDataToCloud() {
       if (!state.isAdmin) return;
       try {
+        state.courses = structuredClone(DEFAULT_COURSES);
+        state.questions = structuredClone(DEFAULT_QUESTIONS);
         await Promise.all([
           setDoc(doc(db, "appData", "curriculum"), {
+            areas: AREAS,
             courses: state.courses,
             updatedAt: new Date().toISOString(),
             updatedBy: state.user.email
@@ -1034,6 +1157,8 @@
             updatedBy: state.user.email
           })
         ]);
+        buildPracticeQueue();
+        render();
         showToast("Datos iniciales publicados en Firestore correctamente.", "success");
       } catch (err) {
         console.error(err);
@@ -1199,6 +1324,7 @@
       const p = state.progress;
       const accuracy = p.totalAnswered > 0 ? Math.round((p.totalCorrect / p.totalAnswered) * 100) : 0;
       const netScore = (p.totalCorrect * SCORE_CORRECT) + (p.totalIncorrect * SCORE_INCORRECT);
+      const pendingErrorsCount = state.questions.filter(q => p.byQuestion[q.id] && p.byQuestion[q.id].lastCorrect === false).length;
 
       const areaBlocks = AREAS.map(area => {
         const areaCourses = state.courses.filter(c => c.areaId === area.id);
@@ -1246,6 +1372,13 @@
             <div class="p-3.5 rounded-xl bg-unalm-50 dark:bg-unalm-900/30 border border-unalm-200 dark:border-unalm-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
               <span class="text-slate-700 dark:text-slate-200">Tu progreso se está guardando localmente en este navegador. Inicia sesión con Google para sincronizarlo en la nube.</span>
               <button onclick="loginWithGoogle()" class="shrink-0 px-3.5 py-1.5 rounded-lg bg-unalm-700 hover:bg-unalm-800 text-white text-xs font-medium">Iniciar sesión</button>
+            </div>
+          ` : ""}
+
+          ${pendingErrorsCount > 0 ? `
+            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+              <span class="text-slate-700 dark:text-slate-200">Tienes <strong class="text-rose-600 dark:text-rose-400">${pendingErrorsCount}</strong> ${pendingErrorsCount === 1 ? "pregunta fallada pendiente" : "preguntas falladas pendientes"} de repaso.</span>
+              <button onclick="startErrorReview()" class="shrink-0 px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium">Repasar errores</button>
             </div>
           ` : ""}
 
@@ -1374,15 +1507,27 @@
     function jumpToPractice(courseId) {
       state.practice.courseId = courseId;
       state.practice.topic = "all";
+      state.practice.onlyErrors = false;
       buildPracticeQueue();
       state.view = "practicar";
       render();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function setPracticeFilter(courseId, topic) {
+    function startErrorReview() {
+      state.practice.courseId = "all";
+      state.practice.topic = "all";
+      state.practice.onlyErrors = true;
+      buildPracticeQueue();
+      state.view = "practicar";
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function setPracticeFilter(courseId, topic, onlyErrors = state.practice.onlyErrors) {
       state.practice.courseId = courseId;
       state.practice.topic = topic;
+      state.practice.onlyErrors = Boolean(onlyErrors);
       buildPracticeQueue();
       render();
     }
@@ -1394,6 +1539,9 @@
       }
       if (state.practice.topic !== "all") {
         list = list.filter(q => q.topic === state.practice.topic);
+      }
+      if (state.practice.onlyErrors) {
+        list = list.filter(q => state.progress.byQuestion[q.id] && state.progress.byQuestion[q.id].lastCorrect === false);
       }
       state.practice.queue = shuffle(list);
       state.practice.index = 0;
@@ -1455,7 +1603,7 @@
         <div class="max-w-3xl mx-auto space-y-5">
           <!-- Filtros y puntaje de sesión -->
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row gap-3 sm:items-end justify-between">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
               <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Curso</label>
                 <select onchange="setPracticeFilter(this.value, 'all')" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
@@ -1468,6 +1616,13 @@
                 <select onchange="setPracticeFilter('${state.practice.courseId}', this.value)" ${state.practice.courseId === "all" ? "disabled" : ""} class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50">
                   <option value="all" ${state.practice.topic === "all" ? "selected" : ""}>Todos los temas</option>
                   ${topics.map(t => `<option value="${escapeHTML(t)}" ${state.practice.topic === t ? "selected" : ""}>${escapeHTML(t)}</option>`).join("")}
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Modo</label>
+                <select onchange="setPracticeFilter('${state.practice.courseId}', '${escapeHTML(state.practice.topic)}', this.value === 'errors')" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                  <option value="all" ${!state.practice.onlyErrors ? "selected" : ""}>Todas las preguntas</option>
+                  <option value="errors" ${state.practice.onlyErrors ? "selected" : ""}>Solo preguntas falladas</option>
                 </select>
               </div>
             </div>
@@ -1881,11 +2036,137 @@
     }
 
     // --- Gestión de Preguntas ---
+    function onAdminFormCourseChange(courseId) {
+      state.admin.lastCourseId = courseId;
+      const course = getCourse(courseId);
+      const topics = course.topics || [];
+      const topicSelect = document.getElementById("admin-topic-select");
+      const customInputWrap = document.getElementById("admin-custom-topic-wrap");
+      const customInput = document.getElementById("admin-custom-topic-input");
+
+      if (!topicSelect) return;
+
+      if (topics.length === 0) {
+        state.admin.customTopicMode = true;
+        topicSelect.innerHTML = `<option value="__custom__" selected>Escribir tema personalizado...</option>`;
+        customInputWrap?.classList.remove("hidden");
+        if (customInput) customInput.value = "";
+      } else {
+        state.admin.customTopicMode = false;
+        state.admin.lastTopic = topics[0];
+        topicSelect.innerHTML = `
+          ${topics.map(t => `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join("")}
+          <option value="__custom__">Otro tema (escribir manualmente)...</option>
+        `;
+        customInputWrap?.classList.add("hidden");
+        if (customInput) customInput.value = "";
+      }
+    }
+
+    function onAdminFormTopicSelectChange(val) {
+      const customInputWrap = document.getElementById("admin-custom-topic-wrap");
+      const customInput = document.getElementById("admin-custom-topic-input");
+      if (val === "__custom__") {
+        state.admin.customTopicMode = true;
+        customInputWrap?.classList.remove("hidden");
+        customInput?.focus();
+      } else {
+        state.admin.customTopicMode = false;
+        state.admin.lastTopic = val;
+        customInputWrap?.classList.add("hidden");
+      }
+    }
+
+    function parseQuickPasteQuestion() {
+      const textarea = document.getElementById("quick-paste-textarea");
+      const form = document.getElementById("admin-question-form");
+      if (!textarea || !form) return;
+
+      const rawText = textarea.value.trim();
+      if (!rawText) {
+        showToast("Pega primero el texto de la pregunta antes de rellenar.", "error");
+        return;
+      }
+
+      const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const questionLines = [];
+      const opts = ["", "", "", "", ""];
+      let currentOptIdx = -1;
+      let answerIdx = null;
+      const explanationLines = [];
+      let inExplanation = false;
+
+      const optRegex = /^(?:\(?([A-Ea-e])[\)\.\-:]\s*)(.*)$/;
+      const ansRegex = /^(?:respuesta|clave|rpta|alternativa\s+correcta|correcta)\s*[:\.\-]?\s*\(?([A-Ea-e])\)?.*$/i;
+      const expRegex = /^(?:resoluci[oó]n|soluci[oó]n|explicaci[oó]n|sustento)\s*[:\.\-]?\s*(.*)$/i;
+
+      for (const line of lines) {
+        const expMatch = line.match(expRegex);
+        if (expMatch) {
+          inExplanation = true;
+          currentOptIdx = -1;
+          if (expMatch[1].trim()) explanationLines.push(expMatch[1].trim());
+          continue;
+        }
+
+        const ansMatch = line.match(ansRegex);
+        if (ansMatch) {
+          const letter = ansMatch[1].toUpperCase();
+          answerIdx = ["A", "B", "C", "D", "E"].indexOf(letter);
+          currentOptIdx = -1;
+          continue;
+        }
+
+        if (inExplanation) {
+          explanationLines.push(line);
+          continue;
+        }
+
+        const optMatch = line.match(optRegex);
+        if (optMatch) {
+          const letter = optMatch[1].toUpperCase();
+          currentOptIdx = ["A", "B", "C", "D", "E"].indexOf(letter);
+          opts[currentOptIdx] = optMatch[2].trim();
+          continue;
+        }
+
+        if (currentOptIdx >= 0 && currentOptIdx <= 4) {
+          opts[currentOptIdx] = (opts[currentOptIdx] + " " + line).trim();
+        } else {
+          questionLines.push(line);
+        }
+      }
+
+      if (questionLines.length > 0) {
+        form.question.value = questionLines.join("\n");
+      }
+      opts.forEach((val, idx) => {
+        if (val) form[`opt${idx}`].value = val;
+      });
+      if (answerIdx !== null && answerIdx >= 0 && answerIdx <= 4) {
+        form.answer.value = String(answerIdx);
+      }
+      if (explanationLines.length > 0) {
+        form.explanation.value = explanationLines.join("\n");
+      }
+
+      const detectedOpts = opts.filter(Boolean).length;
+      if (detectedOpts === 0 && questionLines.length === 0) {
+        showToast("No se pudo identificar la estructura. Verifica el formato del texto pegado.", "error");
+      } else {
+        showToast(`Formulario rellenado (${detectedOpts} alternativas detectadas).`, "success");
+      }
+    }
+
     async function handleSaveQuestion(e) {
       e.preventDefault();
       const form = e.target;
       const courseId = form.courseId.value;
-      const topic = form.topic.value.trim() || "General";
+      const selectedTopicVal = form.topicSelect.value;
+      const topic = selectedTopicVal === "__custom__"
+        ? (form.customTopic.value.trim() || "General")
+        : (selectedTopicVal.trim() || "General");
+
       const question = form.question.value.trim();
       const image = form.image.value.trim();
       const options = [0, 1, 2, 3, 4].map(i => form[`opt${i}`].value.trim());
@@ -1923,6 +2204,10 @@
           id: "q-" + Date.now(),
           ...payload
         });
+        state.admin.lastCourseId = courseId;
+        state.admin.lastTopic = topic;
+        const courseObj = getCourse(courseId);
+        state.admin.customTopicMode = !(courseObj.topics || []).includes(topic);
       }
       render();
       await saveQuestionsToCloud();
@@ -1934,18 +2219,286 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    async function duplicateQuestion(qId) {
+      const original = state.questions.find(q => q.id === qId);
+      if (!original) return;
+      const copy = structuredClone(original);
+      copy.id = "q-" + Date.now();
+      copy.question = copy.question + " (copia)";
+      const idx = state.questions.findIndex(q => q.id === qId);
+      state.questions.splice(idx + 1, 0, copy);
+      state.admin.editingQuestionId = copy.id;
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      await saveQuestionsToCloud();
+      showToast("Pregunta duplicada. Ya puedes editar la copia.", "info");
+    }
+
     function deleteQuestion(qId) {
       showConfirmModal(
         "Eliminar pregunta",
         "Esta pregunta se eliminará permanentemente de Firestore.",
         async () => {
           state.questions = state.questions.filter(q => q.id !== qId);
+          if (state.admin.editingQuestionId === qId) {
+            state.admin.editingQuestionId = null;
+          }
           render();
           await saveQuestionsToCloud();
         },
         "Eliminar",
         true
       );
+    }
+
+    function copyAiPromptTemplate() {
+      const coursesCatalog = state.courses.map(c => {
+        const topicsText = (c.topics || []).map(t => `    - "${t}"`).join("\n");
+        return `- courseId: "${c.id}" (${c.name})\n  Temas válidos:\n${topicsText || '    - "General"'}`;
+      }).join("\n");
+
+      const promptText = `Actúa como especialista en exámenes de admisión de la Universidad Nacional Agraria La Molina (UNALM).
+Convierte las preguntas de las imágenes o texto que te proporcionaré al siguiente formato JSON exacto.
+
+REGLAS ESTRICTAS:
+1. Devuelve ÚNICAMENTE un arreglo JSON válido (sin bloques de texto adicional antes ni después).
+2. Usa exactamente uno de los siguientes "courseId" y su "topic" correspondiente de la lista oficial:
+${coursesCatalog}
+3. "options" debe contener exactamente 5 alternativas (correspondientes a A, B, C, D, E), sin escribir las letras "A)", "B)", etc. al inicio de cada opción.
+4. "answer" debe ser un número entero del 0 al 4 (0 = A, 1 = B, 2 = C, 3 = D, 4 = E).
+5. "explanation" debe contener la resolución clara y paso a paso.
+6. Mantén los campos de imagen como cadenas vacías ("") si la pregunta no lleva gráfico.
+
+ESQUEMA JSON REQUERIDO:
+[
+  {
+    "courseId": "${state.courses[0]?.id || "rv"}",
+    "topic": "${state.courses[0]?.topics?.[0] || "General"}",
+    "question": "Enunciado completo de la pregunta...",
+    "image": "",
+    "options": [
+      "Primera alternativa",
+      "Segunda alternativa",
+      "Tercera alternativa",
+      "Cuarta alternativa",
+      "Quinta alternativa"
+    ],
+    "optionImages": ["", "", "", "", ""],
+    "answer": 0,
+    "explanation": "Explicación detallada paso a paso.",
+    "explanationImage": ""
+  }
+]`;
+
+      const fallbackCopy = () => {
+        const ta = document.createElement("textarea");
+        ta.value = promptText;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        showToast("Plantilla y prompt para IA copiados al portapapeles.", "success");
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(promptText)
+          .then(() => showToast("Plantilla y prompt para IA copiados al portapapeles.", "success"))
+          .catch(() => fallbackCopy());
+      } else {
+        fallbackCopy();
+      }
+    }
+
+    function openJsonImportModal() {
+      state.admin.importParsed = null;
+      const modal = document.getElementById("json-import-modal");
+      const ta = document.getElementById("json-import-textarea");
+      const fileInput = document.getElementById("json-import-file");
+      const preview = document.getElementById("json-import-preview");
+      const btnAppend = document.getElementById("btn-json-append");
+      const btnReplace = document.getElementById("btn-json-replace");
+
+      if (ta) ta.value = "";
+      if (fileInput) fileInput.value = "";
+      if (preview) {
+        preview.className = "p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400";
+        preview.textContent = "Pega el contenido JSON o selecciona un archivo para validar las preguntas antes de guardar.";
+      }
+      if (btnAppend) {
+        btnAppend.disabled = true;
+        btnAppend.textContent = "Sumar a las preguntas actuales";
+      }
+      if (btnReplace) btnReplace.disabled = true;
+
+      modal?.classList.remove("hidden");
+    }
+
+    function closeJsonImportModal() {
+      document.getElementById("json-import-modal")?.classList.add("hidden");
+    }
+
+    function handleJsonFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const ta = document.getElementById("json-import-textarea");
+        if (ta) {
+          ta.value = String(ev.target.result || "");
+          validateJsonImportInput();
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function validateJsonImportInput() {
+      const ta = document.getElementById("json-import-textarea");
+      const preview = document.getElementById("json-import-preview");
+      const btnAppend = document.getElementById("btn-json-append");
+      const btnReplace = document.getElementById("btn-json-replace");
+      if (!ta || !preview) return;
+
+      const raw = ta.value.trim();
+      if (!raw) {
+        state.admin.importParsed = null;
+        preview.className = "p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400";
+        preview.textContent = "Pega el contenido JSON o selecciona un archivo para validar las preguntas antes de guardar.";
+        if (btnAppend) {
+          btnAppend.disabled = true;
+          btnAppend.textContent = "Sumar a las preguntas actuales";
+        }
+        if (btnReplace) btnReplace.disabled = true;
+        return;
+      }
+
+      try {
+        // Limpiar posibles marcas de bloque markdown ```json ... ```
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+        const parsed = JSON.parse(cleaned);
+        const list = Array.isArray(parsed)
+          ? parsed
+          : (Array.isArray(parsed?.items) ? parsed.items : (Array.isArray(parsed?.questions) ? parsed.questions : null));
+
+        if (!list) throw new Error("El JSON debe ser un arreglo de preguntas.");
+
+        const validItems = [];
+        let invalidCount = 0;
+
+        list.forEach((item, idx) => {
+          const qText = String(item?.question || item?.enunciado || "").trim();
+          const rawOpts = Array.isArray(item?.options) ? item.options : (Array.isArray(item?.alternativas) ? item.alternativas : []);
+          const rawOptImgs = Array.isArray(item?.optionImages) ? item.optionImages : [];
+          const has5Opts = rawOpts.length === 5 || rawOptImgs.length === 5;
+          const allOptsValid = [0, 1, 2, 3, 4].every(i => String(rawOpts[i] ?? "").trim() || String(rawOptImgs[i] ?? "").trim());
+
+          if (qText && has5Opts && allOptsValid) {
+            validItems.push(normalizeQuestionItem(item, `imp-${Date.now()}-${idx}`));
+          } else {
+            invalidCount++;
+          }
+        });
+
+        if (validItems.length === 0) {
+          throw new Error("No se encontraron preguntas válidas (cada pregunta requiere enunciado y 5 alternativas).");
+        }
+
+        state.admin.importParsed = validItems;
+
+        const byCourseSummary = {};
+        validItems.forEach(item => {
+          const cName = getCourse(item.courseId).name;
+          byCourseSummary[cName] = (byCourseSummary[cName] || 0) + 1;
+        });
+        const summaryBadges = Object.entries(byCourseSummary)
+          .map(([name, count]) => `${escapeHTML(name)}: ${count}`)
+          .join(" • ");
+
+        preview.className = "p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 space-y-1.5";
+        preview.innerHTML = `
+          <div class="font-semibold">${validItems.length} ${validItems.length === 1 ? "pregunta válida detectada" : "preguntas válidas detectadas"}${invalidCount > 0 ? ` (${invalidCount} omitidas por formato incompleto)` : ""}.</div>
+          <div class="text-[11px] opacity-90">${summaryBadges}</div>
+          <div class="text-[11px] opacity-80 truncate">Muestra: "${escapeHTML(validItems[0].question)}"</div>
+        `;
+
+        if (btnAppend) {
+          btnAppend.disabled = false;
+          btnAppend.textContent = `Sumar (${validItems.length}) a las actuales`;
+        }
+        if (btnReplace) btnReplace.disabled = false;
+      } catch (err) {
+        state.admin.importParsed = null;
+        preview.className = "p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-800 dark:text-rose-200";
+        preview.textContent = `Error de formato JSON: ${err.message}`;
+        if (btnAppend) {
+          btnAppend.disabled = true;
+          btnAppend.textContent = "Sumar a las preguntas actuales";
+        }
+        if (btnReplace) btnReplace.disabled = true;
+      }
+    }
+
+    async function executeJsonImport(mode) {
+      const items = state.admin.importParsed;
+      if (!items || items.length === 0) return;
+
+      if (mode === "append") {
+        const skipDup = document.getElementById("json-skip-duplicates")?.checked ?? true;
+        const existingTexts = new Set(state.questions.map(q => q.question.trim().toLowerCase()));
+        const existingIds = new Set(state.questions.map(q => q.id));
+
+        let added = 0;
+        let skipped = 0;
+        const toInsert = [];
+
+        items.forEach((item, idx) => {
+          const normText = item.question.trim().toLowerCase();
+          if (skipDup && existingTexts.has(normText)) {
+            skipped++;
+            return;
+          }
+          let uniqueId = item.id;
+          if (!uniqueId || existingIds.has(uniqueId)) {
+            uniqueId = `imp-${Date.now()}-${idx}-${Math.floor(Math.random() * 1000)}`;
+          }
+          existingIds.add(uniqueId);
+          existingTexts.add(normText);
+          toInsert.push({ ...item, id: uniqueId });
+          added++;
+        });
+
+        if (added === 0) {
+          showToast(`No se sumaron preguntas nuevas (${skipped} ya existían en el banco).`, "info");
+          closeJsonImportModal();
+          return;
+        }
+
+        state.questions = [...toInsert, ...state.questions];
+        closeJsonImportModal();
+        buildPracticeQueue();
+        render();
+        await saveQuestionsToCloud();
+        showToast(`Se sumaron ${added} preguntas nuevas${skipped > 0 ? ` (${skipped} duplicadas omitidas)` : ""}. Total: ${state.questions.length}.`, "success");
+      } else if (mode === "replace") {
+        showConfirmModal(
+          "Reemplazar banco completo",
+          `Esta acción eliminará las ${state.questions.length} preguntas actuales en Firestore y las reemplazará por las ${items.length} preguntas importadas. ¿Deseas continuar?`,
+          async () => {
+            state.questions = items.map((item, idx) => ({
+              ...item,
+              id: item.id || `imp-${Date.now()}-${idx}`
+            }));
+            closeJsonImportModal();
+            buildPracticeQueue();
+            render();
+            await saveQuestionsToCloud();
+            showToast(`Banco reemplazado con ${state.questions.length} preguntas.`, "success");
+          },
+          "Sí, reemplazar todo",
+          true
+        );
+      }
     }
 
     function exportQuestionsJSON() {
@@ -1956,42 +2509,64 @@
       a.download = "banco-preguntas-unalm.json";
       a.click();
       URL.revokeObjectURL(url);
+      showToast(`Exportadas ${state.questions.length} preguntas en JSON.`, "success");
     }
 
-    function importQuestionsJSON(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const arr = JSON.parse(ev.target.result);
-          if (!Array.isArray(arr)) throw new Error("Formato inválido");
-          let added = 0;
-          arr.forEach((item, i) => {
-            if (item.question && Array.isArray(item.options) && item.options.length === 5) {
-              state.questions.unshift({
-                id: item.id || `imp-${Date.now()}-${i}`,
-                courseId: item.courseId || state.courses[0]?.id || "rv",
-                topic: item.topic || "General",
-                question: String(item.question),
-                image: item.image ? String(item.image) : "",
-                options: item.options.map(String),
-                optionImages: Array.isArray(item.optionImages) ? item.optionImages.slice(0, 5).map(u => String(u || "")) : ["", "", "", "", ""],
-                answer: Math.min(4, Math.max(0, Number(item.answer) || 0)),
-                explanation: item.explanation || "",
-                explanationImage: item.explanationImage ? String(item.explanationImage) : ""
-              });
-              added++;
-            }
-          });
-          render();
-          await saveQuestionsToCloud();
-          showToast(`Se importaron ${added} preguntas.`, "success");
-        } catch {
-          showToast("El archivo JSON no tiene un formato válido.", "error");
+    function onAdminFilterCourseChange(courseId) {
+      state.admin.filterCourse = courseId;
+      state.admin.filterTopic = "all";
+      render();
+    }
+
+    function onAdminFilterTopicChange(topic) {
+      state.admin.filterTopic = topic;
+      render();
+    }
+
+    function onAdminSearchInput(val) {
+      state.admin.searchQuery = val;
+      const filteredQs = getFilteredAdminQuestions();
+      const countEl = document.getElementById("admin-filtered-count");
+      const listEl = document.getElementById("admin-questions-list");
+      if (countEl) countEl.textContent = `${filteredQs.length} mostradas`;
+      if (listEl) listEl.innerHTML = renderAdminQuestionsCards(filteredQs);
+    }
+
+    function getFilteredAdminQuestions() {
+      const qSearch = (state.admin.searchQuery || "").trim().toLowerCase();
+      return state.questions.filter(q => {
+        if (state.admin.filterCourse !== "all" && q.courseId !== state.admin.filterCourse) return false;
+        if (state.admin.filterTopic !== "all" && q.topic !== state.admin.filterTopic) return false;
+        if (qSearch) {
+          const inQuestion = q.question.toLowerCase().includes(qSearch);
+          const inTopic = (q.topic || "").toLowerCase().includes(qSearch);
+          const inOptions = (q.options || []).some(o => (o || "").toLowerCase().includes(qSearch));
+          if (!inQuestion && !inTopic && !inOptions) return false;
         }
-      };
-      reader.readAsText(file);
+        return true;
+      });
+    }
+
+    function renderAdminQuestionsCards(filteredQs) {
+      if (filteredQs.length === 0) {
+        return `<div class="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">No se encontraron preguntas con los filtros actuales.</div>`;
+      }
+      return filteredQs.map(q => `
+        <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-unalm-700 dark:text-unalm-200">
+              <span>${escapeHTML(getCourse(q.courseId).name)} • ${escapeHTML(q.topic)}</span>
+              ${hasAnyImage(q) ? '<span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">Con imagen</span>' : ""}
+            </div>
+            <p class="text-xs text-slate-800 dark:text-slate-100 mt-1 line-clamp-2">${escapeHTML(q.question)}</p>
+          </div>
+          <div class="flex flex-wrap justify-end gap-1.5 shrink-0">
+            <button onclick="duplicateQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">Duplicar</button>
+            <button onclick="editQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200">Editar</button>
+            <button onclick="deleteQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">Eliminar</button>
+          </div>
+        </div>
+      `).join("");
     }
 
     function renderAdmin() {
@@ -2003,9 +2578,21 @@
       const editingCourse = state.admin.editingCourseId ? state.courses.find(c => c.id === state.admin.editingCourseId) : null;
       const editingQuestion = state.admin.editingQuestionId ? state.questions.find(q => q.id === state.admin.editingQuestionId) : null;
 
-      const filteredQs = state.admin.filterCourse === "all"
-        ? state.questions
-        : state.questions.filter(q => q.courseId === state.admin.filterCourse);
+      // Curso y tema activos en el formulario de pregunta
+      const formCourseId = editingQuestion ? editingQuestion.courseId : (state.admin.lastCourseId || state.courses[0]?.id || "rv");
+      const formCourseObj = getCourse(formCourseId);
+      const formCourseTopics = formCourseObj.topics || [];
+      const currentTopicValue = editingQuestion
+        ? editingQuestion.topic
+        : (state.admin.lastTopic || formCourseTopics[0] || "");
+      const isCustomTopic = editingQuestion
+        ? !formCourseTopics.includes(editingQuestion.topic)
+        : (state.admin.customTopicMode || (currentTopicValue && !formCourseTopics.includes(currentTopicValue)));
+
+      // Filtros del listado derecho
+      const filteredQs = getFilteredAdminQuestions();
+      const filterCourseObj = state.admin.filterCourse !== "all" ? getCourse(state.admin.filterCourse) : null;
+      const filterTopicsList = filterCourseObj ? (filterCourseObj.topics || []) : [];
 
       return `
         <div class="space-y-6">
@@ -2014,7 +2601,7 @@
               <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Panel de Administración</h1>
               <p class="text-xs text-slate-500 dark:text-slate-400">Sesión de administrador: ${escapeHTML(state.user.email)}</p>
             </div>
-            <button onclick="publishDefaultDataToCloud()" class="px-4 py-2 rounded-lg border border-unalm-700 text-unalm-700 dark:text-unalm-200 hover:bg-unalm-50 dark:hover:bg-unalm-900/30 text-xs font-semibold">
+            <button onclick="confirmPublishDefaultData()" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium">
               Publicar datos iniciales en Firestore
             </button>
           </div>
@@ -2081,17 +2668,42 @@
           ` : `
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4">
-                <h2 class="font-bold text-base">${editingQuestion ? "Editar pregunta" : "Nueva pregunta"}</h2>
-                <form onsubmit="handleSaveQuestion(event)" class="space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <h2 class="font-bold text-base">${editingQuestion ? "Editar pregunta" : "Nueva pregunta"}</h2>
+                  <button type="button" onclick="copyAiPromptTemplate()" class="px-2.5 py-1 rounded-lg bg-unalm-50 dark:bg-unalm-900/40 border border-unalm-200 dark:border-unalm-800 text-unalm-700 dark:text-unalm-200 hover:bg-unalm-100 text-[11px] font-semibold">
+                    Copiar plantilla y prompt para IA
+                  </button>
+                </div>
+
+                <!-- Pegado rápido desde texto plano -->
+                <details class="rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-3">
+                  <summary class="text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer select-none">
+                    Pegado rápido desde texto plano
+                  </summary>
+                  <div class="mt-2.5 space-y-2">
+                    <textarea id="quick-paste-textarea" rows="5" placeholder="Pega aquí la pregunta completa:&#10;Enunciado...&#10;A) Alternativa 1&#10;B) Alternativa 2&#10;C) Alternativa 3&#10;D) Alternativa 4&#10;E) Alternativa 5&#10;Respuesta: B&#10;Resolución: Explicación..." class="w-full px-2.5 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-unalm-700"></textarea>
+                    <button type="button" onclick="parseQuickPasteQuestion()" class="w-full py-1.5 rounded-lg bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white text-xs font-medium">
+                      Rellenar formulario
+                    </button>
+                  </div>
+                </details>
+
+                <form id="admin-question-form" onsubmit="handleSaveQuestion(event)" class="space-y-3">
                   <div>
                     <label class="block text-xs font-medium mb-1">Curso</label>
-                    <select name="courseId" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
-                      ${state.courses.map(c => `<option value="${c.id}" ${editingQuestion?.courseId === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
+                    <select name="courseId" onchange="onAdminFormCourseChange(this.value)" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                      ${state.courses.map(c => `<option value="${c.id}" ${formCourseId === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
                     </select>
                   </div>
                   <div>
                     <label class="block text-xs font-medium mb-1">Tema</label>
-                    <input name="topic" required value="${escapeHTML(editingQuestion?.topic || "")}" placeholder="Nombre del tema" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+                    <select id="admin-topic-select" name="topicSelect" onchange="onAdminFormTopicSelectChange(this.value)" class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                      ${formCourseTopics.map(t => `<option value="${escapeHTML(t)}" ${!isCustomTopic && currentTopicValue === t ? "selected" : ""}>${escapeHTML(t)}</option>`).join("")}
+                      <option value="__custom__" ${isCustomTopic ? "selected" : ""}>Otro tema (escribir manualmente)...</option>
+                    </select>
+                    <div id="admin-custom-topic-wrap" class="mt-2 ${isCustomTopic ? "" : "hidden"}">
+                      <input id="admin-custom-topic-input" name="customTopic" value="${escapeHTML(isCustomTopic ? currentTopicValue : "")}" placeholder="Escribe el nombre del tema personalizado" class="w-full px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm" />
+                    </div>
                   </div>
                   <div>
                     <label class="block text-xs font-medium mb-1">Enunciado</label>
@@ -2145,39 +2757,31 @@
                 </form>
 
                 <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex gap-2">
-                  <button onclick="exportQuestionsJSON()" class="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Exportar JSON</button>
-                  <label class="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-                    Importar JSON
-                    <input type="file" accept=".json" onchange="importQuestionsJSON(event)" class="hidden" />
-                  </label>
+                  <button type="button" onclick="exportQuestionsJSON()" class="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800">Exportar JSON</button>
+                  <button type="button" onclick="openJsonImportModal()" class="flex-1 py-2 rounded-lg border border-unalm-700 text-unalm-700 dark:text-unalm-200 text-xs font-medium hover:bg-unalm-50 dark:hover:bg-unalm-900/30">Importar JSON</button>
                 </div>
               </div>
 
               <div class="lg:col-span-7 space-y-3">
-                <div class="flex items-center justify-between gap-3">
-                  <select onchange="state.admin.filterCourse=this.value; render();" class="px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-                    <option value="all">Todos los cursos (${state.questions.length})</option>
-                    ${state.courses.map(c => `<option value="${c.id}" ${state.admin.filterCourse === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
-                  </select>
-                  <span class="text-xs text-slate-500">${filteredQs.length} mostradas</span>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 space-y-2.5">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <select onchange="onAdminFilterCourseChange(this.value)" class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                      <option value="all" ${state.admin.filterCourse === "all" ? "selected" : ""}>Todos los cursos (${state.questions.length})</option>
+                      ${state.courses.map(c => `<option value="${c.id}" ${state.admin.filterCourse === c.id ? "selected" : ""}>${escapeHTML(c.name)}</option>`).join("")}
+                    </select>
+                    <select onchange="onAdminFilterTopicChange(this.value)" ${state.admin.filterCourse === "all" ? "disabled" : ""} class="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs disabled:opacity-50">
+                      <option value="all" ${state.admin.filterTopic === "all" ? "selected" : ""}>Todos los temas</option>
+                      ${filterTopicsList.map(t => `<option value="${escapeHTML(t)}" ${state.admin.filterTopic === t ? "selected" : ""}>${escapeHTML(t)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="flex items-center justify-between gap-2">
+                    <input type="search" value="${escapeHTML(state.admin.searchQuery)}" oninput="onAdminSearchInput(this.value)" placeholder="Buscar por palabra clave en enunciado o alternativas..." class="flex-1 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-unalm-700" />
+                    <span id="admin-filtered-count" class="text-xs text-slate-500 shrink-0">${filteredQs.length} mostradas</span>
+                  </div>
                 </div>
 
-                <div class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
-                  ${filteredQs.map(q => `
-                    <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-unalm-700 dark:text-unalm-200">
-                          <span>${escapeHTML(getCourse(q.courseId).name)} • ${escapeHTML(q.topic)}</span>
-                          ${hasAnyImage(q) ? '<span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">Con imagen</span>' : ""}
-                        </div>
-                        <p class="text-xs text-slate-800 dark:text-slate-100 mt-1 line-clamp-2">${escapeHTML(q.question)}</p>
-                      </div>
-                      <div class="flex gap-1.5 shrink-0">
-                        <button onclick="editQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs bg-slate-100 dark:bg-slate-800">Editar</button>
-                        <button onclick="deleteQuestion('${q.id}')" class="px-2.5 py-1 rounded text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40">Eliminar</button>
-                      </div>
-                    </div>
-                  `).join("")}
+                <div id="admin-questions-list" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
+                  ${renderAdminQuestionsCards(filteredQs)}
                 </div>
               </div>
             </div>
@@ -2196,6 +2800,7 @@
       loginWithGoogle,
       logoutGoogle,
       jumpToPractice,
+      startErrorReview,
       setPracticeFilter,
       selectPracticeOption,
       nextPracticeQuestion,
@@ -2207,11 +2812,24 @@
       handleSaveCourse,
       editCourse,
       deleteCourse,
+      onAdminFormCourseChange,
+      onAdminFormTopicSelectChange,
+      parseQuickPasteQuestion,
       handleSaveQuestion,
       editQuestion,
+      duplicateQuestion,
       deleteQuestion,
       exportQuestionsJSON,
-      importQuestionsJSON,
+      openJsonImportModal,
+      closeJsonImportModal,
+      handleJsonFileSelect,
+      validateJsonImportInput,
+      executeJsonImport,
+      copyAiPromptTemplate,
+      onAdminFilterCourseChange,
+      onAdminFilterTopicChange,
+      onAdminSearchInput,
+      confirmPublishDefaultData,
       publishDefaultDataToCloud,
       openImageLightbox,
       closeImageLightbox,
